@@ -19,26 +19,16 @@ const Register: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      // 1. Create user in Supabase Authentication
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Create user in Supabase Authentication
+      // (The PostgreSQL trigger 'on_auth_user_created' automatically creates the user row in public.users)
+      const { error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (authError) throw authError;
 
-      if (authData.user) {
-        // 2. Add user to Supabase 'users' table with a default 'user' role
-        const { error: dbError } = await supabase
-          .from('users')
-          .insert([
-            { id: authData.user.id, email: authData.user.email, role: 'user' }
-          ]);
-        
-        if (dbError) throw dbError;
-      }
-
-      // 3. Navigate to home
+      // Navigate to home
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Failed to create an account');

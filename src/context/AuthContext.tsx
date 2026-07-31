@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('users')
           .select('role')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
         
         if (data && data.role === 'admin') {
           if (mounted) setIsAdmin(true);
