@@ -103,15 +103,34 @@ export async function addBook(name: string, categoryId: string, coverImageUrl?: 
 }
 
 /**
- * Fetch all tags
+ * Fetch all tags. If onlyWithMedia is true (default), only returns tags attached to at least 1 media item.
  */
-export async function fetchAllTags(): Promise<Tag[]> {
-  const { data, error } = await supabase
-    .from('tags')
-    .select('*')
-    .order('name');
-  if (error) throw error;
-  return data || [];
+export async function fetchAllTags(onlyWithMedia = true): Promise<Tag[]> {
+  if (onlyWithMedia) {
+    const { data, error } = await supabase
+      .from('tags')
+      .select('id, name, media_tags!inner(media_id)')
+      .order('name');
+
+    if (error) throw error;
+
+    const uniqueTagsMap = new Map<string, Tag>();
+    if (data) {
+      for (const item of data) {
+        if (!uniqueTagsMap.has(item.id)) {
+          uniqueTagsMap.set(item.id, { id: item.id, name: item.name });
+        }
+      }
+    }
+    return Array.from(uniqueTagsMap.values());
+  } else {
+    const { data, error } = await supabase
+      .from('tags')
+      .select('*')
+      .order('name');
+    if (error) throw error;
+    return data || [];
+  }
 }
 
 /**
@@ -268,11 +287,40 @@ export async function updateMediaRecord(
 
       if (insertTagsError) throw insertTagsError;
     }
+
+    // Clean up any orphan tags that are no longer linked to any media
+    await cleanupOrphanTags();
   }
 }
 
 /**
- * Deletes a media record entirely
+ * Deletes any tags from public.tags that have no remaining associations in media_tags
+ */
+export async function cleanupOrphanTags(): Promise<void> {
+  try {
+    const { data: allTags, error: selectError } = await supabase
+      .from('tags')
+      .select('id, media_tags(tag_id)');
+
+    if (selectError || !allTags) return;
+
+    const orphanTagIds = allTags
+      .filter((tag: any) => !tag.media_tags || tag.media_tags.length === 0)
+      .map((tag: any) => tag.id);
+
+    if (orphanTagIds.length > 0) {
+      await supabase
+        .from('tags')
+        .delete()
+        .in('id', orphanTagIds);
+    }
+  } catch (err) {
+    console.error('Error cleaning up orphan tags:', err);
+  }
+}
+
+/**
+ * Deletes a media record entirely and cleans up orphan tags
  */
 export async function deleteMediaRecord(mediaId: string): Promise<void> {
   const { error } = await supabase
@@ -281,5 +329,8 @@ export async function deleteMediaRecord(mediaId: string): Promise<void> {
     .eq('id', mediaId);
 
   if (error) throw error;
+
+  // Clean up any orphan tags left behind
+  await cleanupOrphanTags();
 }
 
