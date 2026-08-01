@@ -129,8 +129,7 @@ export const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Header & Search Bar */}
-      <header className="pt-8 px-4 relative">
+      <header className="pt-4 px-4 relative">
         <div className="flex max-w-2xl px-2 mx-auto gap-4">
           <h1 className="flex-1 text-4xl font-extrabold text-gray-900 tracking-tight">Praman</h1>
           {isAdmin && (
@@ -228,14 +227,10 @@ export const Home: React.FC = () => {
             {/* Step 2: Result Items List (Displayed when a tag is selected) */}
             {selectedTag && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between px-1">
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Results for <span className="text-indigo-600">{selectedTag.name}</span>
-                  </h3>
-                  <span className="text-xs text-gray-500 font-medium">
-                    {mediaResults.length} {mediaResults.length === 1 ? 'item' : 'items'} found
-                  </span>
-                </div>
+                    <div className="text-xs text-gray-500 font-medium my-3 mx-auto text-center">
+                      {mediaResults.length} {mediaResults.length === 1 ? 'item' : 'items'} found
+                    </div>
+
 
                 {loadingMedia ? (
                   <div className="flex justify-center py-12">
