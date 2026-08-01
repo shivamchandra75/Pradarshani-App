@@ -46,7 +46,7 @@ export const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* Header & Search Bar */}
-      <header className="bg-white py-6 px-4 border-b border-gray-100">
+      <header className="bg-white py-6 px-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between mb-4">
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Praman
@@ -74,7 +74,7 @@ export const Home: React.FC = () => {
 
           <div
             onClick={() => navigate('/search')}
-            className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 shadow-sm hover:shadow-md transition-all cursor-text"
+            className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 transition-all cursor-text"
           >
             <Search className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
             <span className="text-base sm:text-lg text-gray-400 select-none">Tap here to search</span>
