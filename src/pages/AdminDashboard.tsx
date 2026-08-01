@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
 import type { Religion, BookCategory, Book, Tag } from '../types/database';
 import {
@@ -36,7 +37,7 @@ export const AdminDashboard: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBookId, setSelectedBookId] = useState('');
 
-  // Book cover creation modal/state for new book
+  // Book cover creation modal for new book
   const [newBookName, setNewBookName] = useState('');
   const [newBookCoverFile, setNewBookCoverFile] = useState<File | null>(null);
   const [showAddBookModal, setShowAddBookModal] = useState(false);
@@ -46,9 +47,17 @@ export const AdminDashboard: React.FC = () => {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [tagSearchInput, setTagSearchInput] = useState('');
 
-  // UI status
+  // UI status & auto-scroll ref
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to error/success message whenever it changes
+  useEffect(() => {
+    if (message) {
+      messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [message]);
 
   if (!isAdmin) {
     return (
@@ -75,7 +84,7 @@ export const AdminDashboard: React.FC = () => {
 
   const loadTags = async () => {
     try {
-      const data = await fetchAllTags();
+      const data = await fetchAllTags(false);
       setAllTags(data);
     } catch (err: any) {
       console.error('Error fetching tags:', err);
@@ -151,6 +160,7 @@ export const AdminDashboard: React.FC = () => {
       setNewBookName('');
       setNewBookCoverFile(null);
       setShowAddBookModal(false);
+      toast.success(`Book "${createdBook.name}" created successfully!`);
     } catch (err: any) {
       setMessage({ type: 'error', text: `Failed to create book: ${err.message}` });
     } finally {
@@ -166,6 +176,7 @@ export const AdminDashboard: React.FC = () => {
       setAllTags(prev => [...prev, newTag]);
       setSelectedTagIds(prev => [...prev, newTag.id]);
       setTagSearchInput('');
+      toast.success(`Tag #${newTag.name} created!`);
     } catch (err: any) {
       setMessage({ type: 'error', text: `Failed to create tag: ${err.message}` });
     }
@@ -200,13 +211,21 @@ export const AdminDashboard: React.FC = () => {
       // 2. Insert media record & link tags in DB
       await createMediaRecord(uploadedUrl, description, selectedBookId, selectedTagIds);
 
+      // Trigger Toast notification
+      toast.success('Media proof successfully uploaded and linked!');
       setMessage({ type: 'success', text: 'Media proof successfully uploaded and linked!' });
 
-      // Reset form
+      // Reset form completely for a fresh start
       setSelectedFile(null);
       setImagePreviewUrl(null);
       setDescription('');
+      setSelectedReligionId('');
+      setSelectedCategoryId('');
+      setSelectedBookId('');
       setSelectedTagIds([]);
+      setTagSearchInput('');
+      setCategories([]);
+      setBooks([]);
     } catch (err: any) {
       console.error('Submit Error:', err);
       setMessage({ type: 'error', text: err.message || 'Failed to upload media.' });
@@ -226,7 +245,7 @@ export const AdminDashboard: React.FC = () => {
   const bookOptions: SelectOption[] = books.map(b => ({
     id: b.id,
     name: b.name,
-    image_url: b.cover_image_url, // 👈 Passes book cover thumbnail to display in dropdown!
+    image_url: b.cover_image_url,
   }));
 
   const filteredTags = allTags.filter(t =>
@@ -263,9 +282,10 @@ export const AdminDashboard: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
           {message && (
             <div
-              className={`p-4 mb-6 rounded-xl flex items-center space-x-3 ${
+              ref={messageRef}
+              className={`p-4 mb-6 rounded-xl flex items-center space-x-3 transition-all ${
                 message.type === 'error'
-                  ? 'bg-red-50 text-red-700 border border-red-100'
+                  ? 'bg-red-50 text-red-700 border border-red-100 animate-bounce-once'
                   : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
               }`}
             >
@@ -353,7 +373,7 @@ export const AdminDashboard: React.FC = () => {
                 disabled={!selectedReligionId}
               />
 
-              {/* Book Name Select (With Cover Thumbnail Display) */}
+              {/* Book Name Select */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-gray-800">3. Book Name *</label>
@@ -394,7 +414,7 @@ export const AdminDashboard: React.FC = () => {
                       key={tag.id}
                       className="inline-flex items-center space-x-1 px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full"
                     >
-                      <span>{tag.name}</span>
+                      <span>#{tag.name}</span>
                       <button
                         type="button"
                         onClick={() => toggleTagSelection(tag.id)}
@@ -445,7 +465,7 @@ export const AdminDashboard: React.FC = () => {
                             : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        {tag.name} {isSelected && '✓'}
+                        #{tag.name} {isSelected && '✓'}
                       </button>
                     );
                   })

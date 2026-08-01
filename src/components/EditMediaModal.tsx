@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { MediaItem, Religion, BookCategory, Book, Tag } from '../types/database';
 import { X, Upload, Plus, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from './SearchableSelect';
 import {
   fetchReligions,
@@ -52,9 +53,17 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [tagSearchInput, setTagSearchInput] = useState('');
 
-  // UI state
+  // UI state & auto-scroll ref
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to error/success message when set
+  useEffect(() => {
+    if (message) {
+      messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [message]);
 
   // Load initial options & attached tag IDs
   useEffect(() => {
@@ -74,7 +83,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
 
   const loadTags = async () => {
     try {
-      const data = await fetchAllTags();
+      const data = await fetchAllTags(false);
       setAllTags(data);
     } catch (err: any) {
       console.error('Error fetching tags:', err);
@@ -154,6 +163,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
       setNewBookName('');
       setNewBookCoverFile(null);
       setShowAddBookModal(false);
+      toast.success(`Book "${createdBook.name}" created!`);
     } catch (err: any) {
       setMessage({ type: 'error', text: `Failed to create book: ${err.message}` });
     } finally {
@@ -169,6 +179,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
       setAllTags(prev => [...prev, newTag]);
       setSelectedTagIds(prev => [...prev, newTag.id]);
       setTagSearchInput('');
+      toast.success(`Tag #${newTag.name} created!`);
     } catch (err: any) {
       setMessage({ type: 'error', text: `Failed to create tag: ${err.message}` });
     }
@@ -206,6 +217,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
         tagIds: selectedTagIds,
       });
 
+      toast.success('Media item successfully updated!');
       setMessage({ type: 'success', text: 'Media item successfully updated!' });
       setTimeout(() => {
         onSaved();
@@ -252,9 +264,10 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {message && (
             <div
-              className={`p-4 rounded-xl flex items-center space-x-3 ${
+              ref={messageRef}
+              className={`p-4 rounded-xl flex items-center space-x-3 transition-all ${
                 message.type === 'error'
-                  ? 'bg-red-50 text-red-700 border border-red-100'
+                  ? 'bg-red-50 text-red-700 border border-red-100 animate-bounce-once'
                   : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
               }`}
             >

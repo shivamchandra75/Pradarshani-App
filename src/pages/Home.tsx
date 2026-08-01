@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, Tag as TagIcon, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import type { Tag, MediaItem } from '../types/database';
 import { fetchAllTags, fetchMediaByTagId, deleteMediaRecord } from '../services/mediaService';
 import { rankTagsByQuery } from '../utils/search';
@@ -86,13 +87,14 @@ export const Home: React.FC = () => {
 
     try {
       await deleteMediaRecord(item.id);
+      toast.success('Media item deleted permanently!');
       await loadTags();
       if (selectedTag) {
         await loadMediaForTag(selectedTag.id);
       }
     } catch (err: any) {
       console.error('Failed to delete media item:', err);
-      alert(`Failed to delete: ${err.message}`);
+      toast.error(`Failed to delete: ${err.message}`);
     }
   };
 
@@ -111,16 +113,19 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans bg-white ">
       {/* Header & Search Bar */}
-      <header className="bg-white shadow-sm py-8 px-4 relative">
-        <div className="absolute top-4 right-4 flex space-x-3">
+      <header className="pt-8 px-4 relative">
+        <div className="flex max-w-2xl px-4 mx-auto">
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+            Praman
+          </h1>
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 ml-auto rounded-lg hover:bg-indigo-50 transition-colors"
             >
-              Admin Dashboard
+              Dashboard
             </button>
           )}
           <button
@@ -132,32 +137,23 @@ export const Home: React.FC = () => {
           </button>
         </div>
 
-        <div className="max-w-3xl mx-auto text-center space-y-6 pt-4">
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            Pradarshani Media Search
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Search topics, phrases or queries to locate verified proof images
-          </p>
-
-          {/* Search Input Box */}
-          <div className="relative max-w-2xl mx-auto">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
+        <div className="max-w-2xl mx-auto pt-4">
+          <div className="flex items-center justify-center flex-row px-4 focus:border-indigo-500 rounded-full border border-gray-100">
+            <Search className="h-5 w-5 text-gray-400" />
             <input
               type="text"
-              className="block w-full pl-12 pr-4 py-4 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-lg shadow-sm transition-all hover:shadow-md"
+              className="w-full py-4 px-4 border-none leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-300 text-base sm:text-lg transition-all"
               placeholder="Search context (e.g. 'durga ke pati', 'durga ka pati')..."
               value={searchTerm}
               onChange={handleSearchChange}
             />
           </div>
         </div>
+
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {loadingTags ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />

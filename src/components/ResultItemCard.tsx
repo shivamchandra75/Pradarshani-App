@@ -63,9 +63,9 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
           )}
         </div>
 
-        <div className="mt-3 flex items-center justify-between pt-2 border-t border-gray-50">
-          {/* Admin Edit & Delete Buttons */}
-          <div className="flex items-center space-x-1.5">
+        {/* Action Row for Admin Buttons */}
+        {(onEdit || onDelete) && (
+          <div className="mt-3 flex items-center space-x-1.5 pt-2 border-t border-gray-50">
             {onEdit && (
               <button
                 type="button"
@@ -96,11 +96,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
               </button>
             )}
           </div>
-
-          <span className="text-[11px] text-indigo-600 font-medium group-hover:underline">
-            View Image →
-          </span>
-        </div>
+        )}
       </div>
     </div>
   );
