@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import SearchResults from './pages/SearchResults';
 import Register from './pages/Register';
 import './index.css';
 
@@ -50,6 +51,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Home />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/search"
+            element={
+              <PrivateRoute>
+                <SearchResults />
               </PrivateRoute>
             } 
           />
