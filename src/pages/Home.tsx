@@ -9,6 +9,7 @@ import { rankTagsByQuery } from '../utils/search';
 import { ResultItemCard } from '../components/ResultItemCard';
 import { ImageViewerModal } from '../components/ImageViewerModal';
 import { EditMediaModal } from '../components/EditMediaModal';
+import { FolderExplorer } from '../components/FolderExplorer';
 
 export const Home: React.FC = () => {
   const { logout, isAdmin } = useAuth();
@@ -129,27 +130,32 @@ export const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      <header className="pt-4 px-4 relative">
-        <div className="flex max-w-2xl px-2 mx-auto gap-4">
-          <h1 className="flex-1 text-4xl font-extrabold text-gray-900 tracking-tight">Praman</h1>
-          {isAdmin && (
+      {/* Header & Search Bar */}
+      <header className="bg-white py-6 px-4 border-b border-gray-100">
+        <div className="max-w-4xl mx-auto flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Praman
+          </h1>
+          <div className="flex items-center space-x-3">
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                Admin Dashboard
+              </button>
+            )}
             <button
-              onClick={() => navigate('/admin')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 rounded-lg hover:bg-indigo-50 transition-colors"
+              onClick={handleLogout}
+              className="flex items-center space-x-1 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              Dashboard
+              <LogOut size={16} />
+              <span>Logout</span>
             </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-1 text-sm font-medium text-gray-600 hover:text-red-600 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
+          </div>
         </div>
 
-        <div className="max-w-3xl mx-auto text-center space-y-4 pt-4">
+        <div className="max-w-3xl mx-auto text-center space-y-4">
 
           {/* Search Input Box */}
           <div className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
@@ -165,7 +171,7 @@ export const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 ml-2 transition-colors"
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 ml-2 transition-colors"
                 title="Clear search"
               >
                 <X className="w-5 h-5" />
@@ -176,19 +182,15 @@ export const Home: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         {loadingTags ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
           </div>
-        ) : !searchTerm.trim() ? (
-          <div className="text-center py-20 text-gray-400 text-base">
-            Type any search query above to find matching topic tags.
-          </div>
         ) : (
-          <div className="space-y-8">
-            {/* Step 1: Matching Tag Suggestions (Shown only when actively searching and not hidden) */}
-            {!hideSuggestions && matchingTags.length > 0 && (
+          <>
+            {/* Step 1: Matching Tag Suggestions (Shown only when user is typing) */}
+            {searchTerm.trim() && !hideSuggestions && matchingTags.length > 0 && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-fade-in">
                 <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center space-x-1.5">
                   <TagIcon className="w-4 h-4 text-indigo-500" />
@@ -218,19 +220,23 @@ export const Home: React.FC = () => {
             )}
 
             {/* If actively searching but no matching tags found */}
-            {!hideSuggestions && matchingTags.length === 0 && (
-              <div className="text-center py-16 text-gray-500 text-base bg-white rounded-2xl border border-gray-100 p-6">
+            {searchTerm.trim() && !hideSuggestions && matchingTags.length === 0 && (
+              <div className="text-center py-12 text-gray-500 text-base bg-white rounded-2xl border border-gray-100 p-6">
                 No tags found matching "{searchTerm}". Try different keywords.
               </div>
             )}
 
-            {/* Step 2: Result Items List (Displayed when a tag is selected) */}
+            {/* Step 2: Search Result Items List (Displayed when a tag is selected) */}
             {selectedTag && (
               <div className="space-y-4">
-                    <div className="text-xs text-gray-500 font-medium my-3 mx-auto text-center">
-                      {mediaResults.length} {mediaResults.length === 1 ? 'item' : 'items'} found
-                    </div>
-
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Results for <span className="text-indigo-600">{selectedTag.name}</span>
+                  </h3>
+                  <span className="text-xs text-gray-500 font-medium">
+                    {mediaResults.length} {mediaResults.length === 1 ? 'item' : 'items'} found
+                  </span>
+                </div>
 
                 {loadingMedia ? (
                   <div className="flex justify-center py-12">
@@ -255,7 +261,17 @@ export const Home: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
+
+            {/* Step 3: iOS Finder-Style Folder Directory Explorer */}
+            <div className="pt-2">
+              <FolderExplorer
+                isAdmin={isAdmin}
+                onSelectMedia={(item) => setActiveMediaItem(item)}
+                onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
+                onDeleteMedia={isAdmin ? (item) => handleDeleteMedia(item) : undefined}
+              />
+            </div>
+          </>
         )}
       </main>
 
