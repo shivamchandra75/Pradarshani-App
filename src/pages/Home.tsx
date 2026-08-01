@@ -166,7 +166,7 @@ export const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 ml-2 transition-colors"
+                className="text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 ml-2 transition-colors"
                 title="Clear search"
               >
                 <X className="w-5 h-5" />
