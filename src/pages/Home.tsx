@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, Tag as TagIcon, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { Tag, MediaItem } from '../types/database';
-import { fetchAllTags, fetchMediaByTagId } from '../services/mediaService';
+import { fetchAllTags, fetchMediaByTagId, deleteMediaRecord } from '../services/mediaService';
 import { rankTagsByQuery } from '../utils/search';
 import { ResultItemCard } from '../components/ResultItemCard';
 import { ImageViewerModal } from '../components/ImageViewerModal';
+import { EditMediaModal } from '../components/EditMediaModal';
 
 export const Home: React.FC = () => {
   const { logout, isAdmin } = useAuth();
@@ -23,20 +24,24 @@ export const Home: React.FC = () => {
   // Lightbox Modal state
   const [activeMediaItem, setActiveMediaItem] = useState<MediaItem | null>(null);
 
+  // Admin Edit Modal state
+  const [editingMediaItem, setEditingMediaItem] = useState<MediaItem | null>(null);
+
+  const loadTags = useCallback(async () => {
+    try {
+      const data = await fetchAllTags();
+      setAllTags(data);
+    } catch (err) {
+      console.error('Error fetching tags:', err);
+    } finally {
+      setLoadingTags(false);
+    }
+  }, []);
+
   // Load tags on mount
   useEffect(() => {
-    const loadTags = async () => {
-      try {
-        const data = await fetchAllTags();
-        setAllTags(data);
-      } catch (err) {
-        console.error('Error fetching tags:', err);
-      } finally {
-        setLoadingTags(false);
-      }
-    };
     loadTags();
-  }, []);
+  }, [loadTags]);
 
   // Compute matching tags based on token overlap algorithm
   const matchingTags = useMemo(() => {
@@ -44,27 +49,52 @@ export const Home: React.FC = () => {
     return rankTagsByQuery(allTags, searchTerm);
   }, [allTags, searchTerm]);
 
+  const loadMediaForTag = useCallback(async (tagId: string) => {
+    setLoadingMedia(true);
+    try {
+      const results = await fetchMediaByTagId(tagId);
+      setMediaResults(results);
+    } catch (err) {
+      console.error('Error fetching media for tag:', err);
+    } finally {
+      setLoadingMedia(false);
+    }
+  }, []);
+
   // Fetch media when a tag is selected
   useEffect(() => {
     if (!selectedTag) {
       setMediaResults([]);
       return;
     }
+    loadMediaForTag(selectedTag.id);
+  }, [selectedTag, loadMediaForTag]);
 
-    const loadMedia = async () => {
-      setLoadingMedia(true);
-      try {
-        const results = await fetchMediaByTagId(selectedTag.id);
-        setMediaResults(results);
-      } catch (err) {
-        console.error('Error fetching media for tag:', err);
-      } finally {
-        setLoadingMedia(false);
+  // Handler after editing a media item
+  const handleMediaSaved = async () => {
+    setEditingMediaItem(null);
+    await loadTags();
+    if (selectedTag) {
+      await loadMediaForTag(selectedTag.id);
+    }
+  };
+
+  // Handler for deleting a media item directly from card
+  const handleDeleteMedia = async (item: MediaItem) => {
+    const confirmed = window.confirm('Are you sure you want to delete this media item permanently?');
+    if (!confirmed) return;
+
+    try {
+      await deleteMediaRecord(item.id);
+      await loadTags();
+      if (selectedTag) {
+        await loadMediaForTag(selectedTag.id);
       }
-    };
-
-    loadMedia();
-  }, [selectedTag]);
+    } catch (err: any) {
+      console.error('Failed to delete media item:', err);
+      alert(`Failed to delete: ${err.message}`);
+    }
+  };
 
   // Reset tag selection when user clears search
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,6 +227,8 @@ export const Home: React.FC = () => {
                         key={item.id}
                         item={item}
                         onClick={() => setActiveMediaItem(item)}
+                        onEdit={isAdmin ? () => setEditingMediaItem(item) : undefined}
+                        onDelete={isAdmin ? () => handleDeleteMedia(item) : undefined}
                       />
                     ))}
                   </div>
@@ -220,6 +252,15 @@ export const Home: React.FC = () => {
             .join(' / ')}
           description={activeMediaItem.description}
           onClose={() => setActiveMediaItem(null)}
+        />
+      )}
+
+      {/* Admin Edit Media Modal */}
+      {editingMediaItem && (
+        <EditMediaModal
+          item={editingMediaItem}
+          onClose={() => setEditingMediaItem(null)}
+          onSaved={handleMediaSaved}
         />
       )}
     </div>

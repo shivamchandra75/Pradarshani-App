@@ -1,13 +1,15 @@
 import React from 'react';
 import type { MediaItem } from '../types/database';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Edit3, Trash2 } from 'lucide-react';
 
 interface ResultItemCardProps {
   item: MediaItem;
   onClick: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick }) => {
+export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, onEdit, onDelete }) => {
   const bookName = item.book?.name || 'Unknown Book';
   const categoryName = item.book?.category?.name || '';
   const religionName = item.book?.category?.religion?.name || '';
@@ -18,7 +20,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick })
   return (
     <div
       onClick={onClick}
-      className="flex w-full bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden cursor-pointer transition-all duration-200 group hover:border-indigo-200"
+      className="flex w-full bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden cursor-pointer transition-all duration-200 group hover:border-indigo-200 relative"
     >
       {/* Column 1 (30% Horizontal Space) - Book Cover Image */}
       <div className="w-[30%] bg-gray-50 flex items-center justify-center border-r border-gray-100 relative min-h-[120px]">
@@ -61,7 +63,40 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick })
           )}
         </div>
 
-        <div className="mt-3 flex items-center justify-end">
+        <div className="mt-3 flex items-center justify-between pt-2 border-t border-gray-50">
+          {/* Admin Edit & Delete Buttons */}
+          <div className="flex items-center space-x-1.5">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg border border-indigo-200 transition-colors"
+                title="Edit item properties"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
+            )}
+
+            {onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="flex items-center space-x-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg border border-red-200 transition-colors"
+                title="Delete media item"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+            )}
+          </div>
+
           <span className="text-[11px] text-indigo-600 font-medium group-hover:underline">
             View Image →
           </span>

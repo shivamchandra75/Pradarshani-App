@@ -204,3 +204,82 @@ export async function fetchMediaByTagId(tagId: string): Promise<MediaItem[]> {
 
   return mediaList;
 }
+
+/**
+ * Fetches all attached tag IDs for a given media ID
+ */
+export async function fetchTagIdsForMedia(mediaId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('media_tags')
+    .select('tag_id')
+    .eq('media_id', mediaId);
+
+  if (error) throw error;
+  return data ? data.map(row => row.tag_id) : [];
+}
+
+/**
+ * Updates a media record (image_url, description, book_id) and syncs its attached tags.
+ */
+export async function updateMediaRecord(
+  mediaId: string,
+  updates: {
+    imageUrl?: string;
+    description?: string | null;
+    bookId?: string;
+    tagIds?: string[];
+  }
+): Promise<void> {
+  const updateData: Record<string, any> = {};
+  if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
+  if (updates.description !== undefined) updateData.description = updates.description?.trim() || null;
+  if (updates.bookId !== undefined) updateData.book_id = updates.bookId;
+
+  if (Object.keys(updateData).length > 0) {
+    const { error: mediaUpdateError } = await supabase
+      .from('media')
+      .update(updateData)
+      .eq('id', mediaId);
+
+    if (mediaUpdateError) throw mediaUpdateError;
+  }
+
+  if (updates.tagIds !== undefined) {
+    const uniqueTagIds = Array.from(new Set(updates.tagIds));
+
+    // Delete existing tag associations for this media
+    const { error: deleteTagsError } = await supabase
+      .from('media_tags')
+      .delete()
+      .eq('media_id', mediaId);
+
+    if (deleteTagsError) throw deleteTagsError;
+
+    // Insert/upsert new tag associations
+    if (uniqueTagIds.length > 0) {
+      const mediaTagRows = uniqueTagIds.map(tagId => ({
+        media_id: mediaId,
+        tag_id: tagId,
+      }));
+
+      const { error: insertTagsError } = await supabase
+        .from('media_tags')
+        .upsert(mediaTagRows, { onConflict: 'media_id,tag_id' });
+
+      if (insertTagsError) throw insertTagsError;
+    }
+  }
+}
+
+/**
+ * Deletes a media record entirely
+ */
+export async function deleteMediaRecord(mediaId: string): Promise<void> {
+  const { error } = await supabase
+    .from('media')
+    .delete()
+    .eq('id', mediaId);
+
+  if (error) throw error;
+}
+
