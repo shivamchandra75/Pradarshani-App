@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Tag as TagIcon, LogOut, Loader2 } from 'lucide-react';
+import { Search, Tag as TagIcon, LogOut, Loader2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -17,6 +17,7 @@ export const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  const [hideSuggestions, setHideSuggestions] = useState(false);
 
   const [mediaResults, setMediaResults] = useState<MediaItem[]>([]);
   const [loadingTags, setLoadingTags] = useState(true);
@@ -71,6 +72,13 @@ export const Home: React.FC = () => {
     loadMediaForTag(selectedTag.id);
   }, [selectedTag, loadMediaForTag]);
 
+  // Handler when user taps a suggested tag
+  const handleSelectTag = (tag: Tag) => {
+    setSelectedTag(tag);
+    setSearchTerm(tag.name); // Set input text to selected tag name
+    setHideSuggestions(true); // Hide suggestions component once tag is chosen
+  };
+
   // Handler after editing a media item
   const handleMediaSaved = async () => {
     setEditingMediaItem(null);
@@ -98,13 +106,20 @@ export const Home: React.FC = () => {
     }
   };
 
-  // Reset tag selection when user clears search
+  // Reset or change search input
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchTerm(val);
+    setHideSuggestions(false); // Show suggestions while user is actively typing
     if (!val.trim()) {
       setSelectedTag(null);
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setSelectedTag(null);
+    setHideSuggestions(false);
   };
 
   const handleLogout = async () => {
@@ -113,43 +128,52 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-white ">
+    <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* Header & Search Bar */}
       <header className="pt-8 px-4 relative">
-        <div className="flex max-w-2xl px-4 mx-auto">
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            Praman
-          </h1>
+        <div className="flex max-w-2xl px-2 mx-auto gap-4">
+          <h1 className="flex-1 text-4xl font-extrabold text-gray-900 tracking-tight">Praman</h1>
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 ml-auto rounded-lg hover:bg-indigo-50 transition-colors"
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 rounded-lg hover:bg-indigo-50 transition-colors"
             >
               Dashboard
             </button>
           )}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-1 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center space-x-1 text-sm font-medium text-gray-600 hover:text-red-600 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <LogOut size={16} />
             <span>Logout</span>
           </button>
         </div>
 
-        <div className="max-w-2xl mx-auto pt-4">
-          <div className="flex items-center justify-center flex-row px-4 focus:border-indigo-500 rounded-full border border-gray-100">
-            <Search className="h-5 w-5 text-gray-400" />
+        <div className="max-w-3xl mx-auto text-center space-y-4 pt-4">
+
+          {/* Search Input Box */}
+          <div className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500">
+            <Search className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
             <input
               type="text"
-              className="w-full py-4 px-4 border-none leading-5 bg-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-300 text-base sm:text-lg transition-all"
+              className="w-full bg-transparent border-none text-base sm:text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0"
               placeholder="Search context (e.g. 'durga ke pati', 'durga ka pati')..."
               value={searchTerm}
               onChange={handleSearchChange}
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 ml-2 transition-colors"
+                title="Clear search"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
-
       </header>
 
       {/* Main Content Area */}
@@ -162,46 +186,51 @@ export const Home: React.FC = () => {
           <div className="text-center py-20 text-gray-400 text-base">
             Type any search query above to find matching topic tags.
           </div>
-        ) : matchingTags.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 text-base">
-            No tags found matching "{searchTerm}". Try different keywords.
-          </div>
         ) : (
           <div className="space-y-8">
-            {/* Step 1: Matching Tag Pills */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center space-x-1.5">
-                <TagIcon className="w-4 h-4 text-indigo-500" />
-                <span>Select a matching tag below:</span>
-              </h2>
+            {/* Step 1: Matching Tag Suggestions (Shown only when actively searching and not hidden) */}
+            {!hideSuggestions && matchingTags.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-fade-in">
+                <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center space-x-1.5">
+                  <TagIcon className="w-4 h-4 text-indigo-500" />
+                  <span>Select a matching tag below:</span>
+                </h2>
 
-              <div className="flex flex-wrap gap-2.5">
-                {matchingTags.map((tag) => {
-                  const isSelected = selectedTag?.id === tag.id;
-                  return (
-                    <button
-                      key={tag.id}
-                      onClick={() => setSelectedTag(tag)}
-                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm flex items-center space-x-1.5 ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white ring-2 ring-indigo-600 ring-offset-2 scale-105'
-                          : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 border border-indigo-100'
-                      }`}
-                    >
-                      <span>#{tag.name}</span>
-                      {isSelected && <span className="text-xs">✓</span>}
-                    </button>
-                  );
-                })}
+                <div className="flex flex-wrap gap-2.5">
+                  {matchingTags.map((tag) => {
+                    const isSelected = selectedTag?.id === tag.id;
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => handleSelectTag(tag)}
+                        className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm flex items-center space-x-1.5 ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white ring-2 ring-indigo-600 ring-offset-2 scale-105'
+                            : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 border border-indigo-100'
+                        }`}
+                      >
+                        <span>{tag.name}</span>
+                        {isSelected && <span className="text-xs">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* If actively searching but no matching tags found */}
+            {!hideSuggestions && matchingTags.length === 0 && (
+              <div className="text-center py-16 text-gray-500 text-base bg-white rounded-2xl border border-gray-100 p-6">
+                No tags found matching "{searchTerm}". Try different keywords.
+              </div>
+            )}
 
             {/* Step 2: Result Items List (Displayed when a tag is selected) */}
             {selectedTag && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                   <h3 className="text-lg font-bold text-gray-900">
-                    Results for <span className="text-indigo-600">#{selectedTag.name}</span>
+                    Results for <span className="text-indigo-600">{selectedTag.name}</span>
                   </h3>
                   <span className="text-xs text-gray-500 font-medium">
                     {mediaResults.length} {mediaResults.length === 1 ? 'item' : 'items'} found
@@ -214,7 +243,7 @@ export const Home: React.FC = () => {
                   </div>
                 ) : mediaResults.length === 0 ? (
                   <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center text-gray-500">
-                    No images found associated with tag #{selectedTag.name}.
+                    No images found associated with tag {selectedTag.name}.
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

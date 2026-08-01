@@ -390,7 +390,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                       key={tag.id}
                       className="inline-flex items-center space-x-1 px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full"
                     >
-                      <span>#{tag.name}</span>
+                      <span>{tag.name}</span>
                       <button
                         type="button"
                         onClick={() => toggleTagSelection(tag.id)}
@@ -442,7 +442,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                             : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        #{tag.name} {isSelected && '✓'}
+                        {tag.name} {isSelected && '✓'}
                       </button>
                     );
                   })
