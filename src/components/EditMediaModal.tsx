@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import type { MediaItem, Religion, BookCategory, Book, Tag } from '../types/database';
+import { X, Upload, Plus, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
-import type { Religion, BookCategory, Book, Tag } from '../types/database';
+import { SearchableSelect, type SelectOption } from './SearchableSelect';
 import {
   fetchReligions,
   addReligion,
@@ -14,63 +12,64 @@ import {
   addBook,
   fetchAllTags,
   addTag,
+  fetchTagIdsForMedia,
   uploadImageFile,
-  createMediaRecord,
+  updateMediaRecord,
 } from '../services/mediaService';
 
-export const AdminDashboard: React.FC = () => {
-  const { isAdmin, logout } = useAuth();
-  const navigate = useNavigate();
+interface EditMediaModalProps {
+  item: MediaItem;
+  onClose: () => void;
+  onSaved: () => void;
+}
 
-  // Form states
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const [description, setDescription] = useState('');
+export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, onSaved }) => {
+  // Form states initialized with item values
+  const [description, setDescription] = useState(item.description || '');
+  const [replacementFile, setReplacementFile] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>(item.image_url);
 
-  // Cascading relational states
+  // Relational cascading states
   const [religions, setReligions] = useState<Religion[]>([]);
-  const [selectedReligionId, setSelectedReligionId] = useState('');
+  const [selectedReligionId, setSelectedReligionId] = useState<string>(
+    item.book?.category?.religion?.id || ''
+  );
 
   const [categories, setCategories] = useState<BookCategory[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
+    item.book?.category?.id || ''
+  );
 
   const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState('');
+  const [selectedBookId, setSelectedBookId] = useState<string>(item.book?.id || '');
 
-  // Book cover creation modal for new book
+  // Book cover creation modal for inline new book
+  const [showAddBookModal, setShowAddBookModal] = useState(false);
   const [newBookName, setNewBookName] = useState('');
   const [newBookCoverFile, setNewBookCoverFile] = useState<File | null>(null);
-  const [showAddBookModal, setShowAddBookModal] = useState(false);
 
   // Tags state
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [tagSearchInput, setTagSearchInput] = useState('');
 
-  // UI status & auto-scroll ref
+  // UI state & auto-scroll ref
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to error/success message whenever it changes
+  // Auto-scroll to error/success message when set
   useEffect(() => {
     if (message) {
       messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [message]);
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl text-red-600 font-semibold">Access Denied. Admin privileges required.</p>
-      </div>
-    );
-  }
-
-  // Load initial religions and tags
+  // Load initial options & attached tag IDs
   useEffect(() => {
     loadReligions();
     loadTags();
+    loadAttachedTagIds();
   }, []);
 
   const loadReligions = async () => {
@@ -91,38 +90,42 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const loadAttachedTagIds = async () => {
+    try {
+      const ids = await fetchTagIdsForMedia(item.id);
+      setSelectedTagIds(ids);
+    } catch (err: any) {
+      console.error('Error loading attached tag IDs:', err);
+    }
+  };
+
   // Load categories when religion changes
   useEffect(() => {
-    setSelectedCategoryId('');
-    setSelectedBookId('');
-    setCategories([]);
-    setBooks([]);
-
     if (selectedReligionId) {
       fetchCategoriesByReligion(selectedReligionId)
         .then(setCategories)
         .catch(console.error);
+    } else {
+      setCategories([]);
     }
   }, [selectedReligionId]);
 
   // Load books when category changes
   useEffect(() => {
-    setSelectedBookId('');
-    setBooks([]);
-
     if (selectedCategoryId) {
       fetchBooksByCategory(selectedCategoryId)
         .then(setBooks)
         .catch(console.error);
+    } else {
+      setBooks([]);
     }
   }, [selectedCategoryId]);
 
-  // Handle Proof Image File Selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReplacementFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedFile(file);
-      setImagePreviewUrl(URL.createObjectURL(file));
+      setReplacementFile(file);
+      setPreviewImageUrl(URL.createObjectURL(file));
     }
   };
 
@@ -160,7 +163,7 @@ export const AdminDashboard: React.FC = () => {
       setNewBookName('');
       setNewBookCoverFile(null);
       setShowAddBookModal(false);
-      toast.success(`Book "${createdBook.name}" created successfully!`);
+      toast.success(`Book "${createdBook.name}" created!`);
     } catch (err: any) {
       setMessage({ type: 'error', text: `Failed to create book: ${err.message}` });
     } finally {
@@ -176,7 +179,7 @@ export const AdminDashboard: React.FC = () => {
       setAllTags(prev => [...prev, newTag]);
       setSelectedTagIds(prev => [...prev, newTag.id]);
       setTagSearchInput('');
-      toast.success(`Tag "${newTag.name}" created!`);
+      toast.success(`Tag #${newTag.name} created!`);
     } catch (err: any) {
       setMessage({ type: 'error', text: `Failed to create tag: ${err.message}` });
     }
@@ -188,58 +191,46 @@ export const AdminDashboard: React.FC = () => {
     );
   };
 
-  // Main Submit Handler
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Save changes handler
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
-      return setMessage({ type: 'error', text: 'Please select an image file to upload.' });
-    }
     if (!selectedBookId) {
       return setMessage({ type: 'error', text: 'Please select a Book.' });
     }
     if (selectedTagIds.length === 0) {
-      return setMessage({ type: 'error', text: 'Please select or add at least one tag.' });
+      return setMessage({ type: 'error', text: 'Please attach at least one tag.' });
     }
 
     setLoading(true);
     setMessage(null);
 
     try {
-      // 1. Upload proof image to Supabase Storage
-      const uploadedUrl = await uploadImageFile(selectedFile, 'proofs');
+      let finalImageUrl = item.image_url;
+      if (replacementFile) {
+        finalImageUrl = await uploadImageFile(replacementFile, 'proofs');
+      }
 
-      // 2. Insert media record & link tags in DB
-      await createMediaRecord(uploadedUrl, description, selectedBookId, selectedTagIds);
+      await updateMediaRecord(item.id, {
+        imageUrl: finalImageUrl,
+        description: description,
+        bookId: selectedBookId,
+        tagIds: selectedTagIds,
+      });
 
-      // Trigger Toast notification
-      toast.success('Media proof successfully uploaded and linked!');
-      setMessage({ type: 'success', text: 'Media proof successfully uploaded and linked!' });
-
-      // Reset form completely for a fresh start
-      setSelectedFile(null);
-      setImagePreviewUrl(null);
-      setDescription('');
-      setSelectedReligionId('');
-      setSelectedCategoryId('');
-      setSelectedBookId('');
-      setSelectedTagIds([]);
-      setTagSearchInput('');
-      setCategories([]);
-      setBooks([]);
+      toast.success('Media item successfully updated!');
+      setMessage({ type: 'success', text: 'Media item successfully updated!' });
+      setTimeout(() => {
+        onSaved();
+      }, 500);
     } catch (err: any) {
-      console.error('Submit Error:', err);
-      setMessage({ type: 'error', text: err.message || 'Failed to upload media.' });
+      console.error('Update Error:', err);
+      setMessage({ type: 'error', text: err.message || 'Failed to update media item.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  // Format options for SearchableSelect
+  // Option lists for SearchableSelect
   const religionOptions: SelectOption[] = religions.map(r => ({ id: r.id, name: r.name }));
   const categoryOptions: SelectOption[] = categories.map(c => ({ id: c.id, name: c.name }));
   const bookOptions: SelectOption[] = books.map(b => ({
@@ -253,37 +244,28 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div className="relative max-w-3xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-1">Upload proof images & manage relational metadata</p>
+            <h3 className="text-lg font-bold text-gray-900">Edit Media Properties</h3>
+            <p className="text-xs text-gray-500">Modify proof image, tags, or book linkage</p>
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors"
-            >
-              Go to Search →
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-1.5 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-500 hover:text-red-600 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Upload Form Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+        {/* Scrollable Form Body */}
+        <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {message && (
             <div
               ref={messageRef}
-              className={`p-4 mb-6 rounded-xl flex items-center space-x-3 transition-all ${
+              className={`p-4 rounded-xl flex items-center space-x-3 transition-all ${
                 message.type === 'error'
                   ? 'bg-red-50 text-red-700 border border-red-100 animate-bounce-once'
                   : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -298,48 +280,45 @@ export const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 1. Device Image Picker */}
+          <form id="edit-media-form" onSubmit={handleSave} className="space-y-6">
+            {/* 1. Image Preview & Replace */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Proof Image (Upload from device gallery) *
+                Uploaded Proof Image
               </label>
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-indigo-50/50 hover:border-indigo-400 transition-all overflow-hidden relative">
-                  {imagePreviewUrl ? (
-                    <div className="w-full h-full relative group">
-                      <img
-                        src={imagePreviewUrl}
-                        alt="Selected Preview"
-                        className="w-full h-full object-contain p-2"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold">
-                        Click to change image
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-10 h-10 text-indigo-400 mb-2" />
-                      <p className="mb-1 text-sm text-gray-700 font-medium">
-                        Click or drag image here to upload
-                      </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 10MB</p>
-                    </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <img
+                  src={previewImageUrl}
+                  alt="Proof preview"
+                  className="w-32 h-32 object-contain rounded-lg border border-gray-300 bg-white shadow-sm"
+                />
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <p className="text-xs text-gray-500">
+                    Replace this proof image by selecting a new file from your device:
+                  </p>
+                  <label className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer shadow-sm transition-all">
+                    <Upload className="w-4 h-4 text-indigo-600" />
+                    <span>{replacementFile ? 'Change Selected File' : 'Upload Replacement Image'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleReplacementFileChange}
+                    />
+                  </label>
+                  {replacementFile && (
+                    <p className="text-xs text-indigo-600 font-medium truncate">
+                      Selected: {replacementFile.name}
+                    </p>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </label>
+                </div>
               </div>
             </div>
 
             {/* 2. Description */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Description (Optional)
+                Description
               </label>
               <textarea
                 rows={3}
@@ -350,11 +329,10 @@ export const AdminDashboard: React.FC = () => {
               />
             </div>
 
-            {/* 3. Cascading Selects Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-              {/* Religion Select */}
+            {/* 3. Relational Selects */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SearchableSelect
-                label="1. Religion *"
+                label="Religion *"
                 options={religionOptions}
                 selectedValue={selectedReligionId}
                 onChange={setSelectedReligionId}
@@ -362,9 +340,8 @@ export const AdminDashboard: React.FC = () => {
                 placeholder="Select Religion"
               />
 
-              {/* Book Category Select */}
               <SearchableSelect
-                label="2. Book Category *"
+                label="Book Category *"
                 options={categoryOptions}
                 selectedValue={selectedCategoryId}
                 onChange={setSelectedCategoryId}
@@ -373,10 +350,9 @@ export const AdminDashboard: React.FC = () => {
                 disabled={!selectedReligionId}
               />
 
-              {/* Book Name Select */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm font-semibold text-gray-800">3. Book Name *</label>
+                  <label className="text-sm font-semibold text-gray-800">Book Name *</label>
                   {selectedCategoryId && (
                     <button
                       type="button"
@@ -398,10 +374,10 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* 4. Multi-Tag Selection */}
-            <div className="pt-2">
+            {/* 4. Tags Management */}
+            <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Tags (Select existing or type new) *
+                Attached Tags (Add/Remove)
               </label>
 
               {/* Selected Tag Pills */}
@@ -419,6 +395,7 @@ export const AdminDashboard: React.FC = () => {
                         type="button"
                         onClick={() => toggleTagSelection(tag.id)}
                         className="hover:text-indigo-950 ml-1"
+                        title="Remove tag"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -432,7 +409,7 @@ export const AdminDashboard: React.FC = () => {
                 <input
                   type="text"
                   className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Filter or type new tag (e.g. durga pati)..."
+                  placeholder="Filter or type new tag..."
                   value={tagSearchInput}
                   onChange={(e) => setTagSearchInput(e.target.value)}
                 />
@@ -450,7 +427,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Tag Options Grid */}
-              <div className="mt-3 max-h-36 overflow-y-auto p-3 border border-gray-200 rounded-xl bg-gray-50 flex flex-wrap gap-2">
+              <div className="mt-3 max-h-32 overflow-y-auto p-3 border border-gray-200 rounded-xl bg-gray-50 flex flex-wrap gap-2">
                 {filteredTags.length > 0 ? (
                   filteredTags.map((tag) => {
                     const isSelected = selectedTagIds.includes(tag.id);
@@ -470,28 +447,39 @@ export const AdminDashboard: React.FC = () => {
                     );
                   })
                 ) : (
-                  <span className="text-xs text-gray-500 italic">No tags match. Click "Add Tag" above to create it.</span>
+                  <span className="text-xs text-gray-500 italic">No tags match. Type above to add a new tag.</span>
                 )}
               </div>
             </div>
-
-            {/* Submit Button */}
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center py-3 px-6 border border-transparent rounded-xl text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 shadow-md transition-all"
-              >
-                {loading ? 'Uploading & Saving...' : 'Upload Media Proof'}
-              </button>
-            </div>
           </form>
+        </div>
+
+        {/* Modal Footer Actions - Vertically Stacked */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2.5">
+          <button
+            type="submit"
+            form="edit-media-form"
+            disabled={loading}
+            className="w-full flex items-center justify-center space-x-2 py-2.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow transition-all disabled:opacity-50"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>Save Changes</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="w-full text-center py-2.5 px-6 text-sm font-semibold text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors"
+          >
+            Cancel
+          </button>
         </div>
       </div>
 
       {/* Modal for Creating New Book with Book Cover */}
       {showAddBookModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex justify-between items-center border-b pb-3">
               <h3 className="text-lg font-bold text-gray-900">Add New Book</h3>
@@ -550,5 +538,3 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
-
-export default AdminDashboard;

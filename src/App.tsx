@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
@@ -30,6 +31,18 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <AuthProvider>
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 4000,
+          style: {
+            borderRadius: '12px',
+            background: '#1e293b',
+            color: '#fff',
+            fontSize: '14px',
+          },
+        }} 
+      />
       <Router>
         <Routes>
           <Route 
