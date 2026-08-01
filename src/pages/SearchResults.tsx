@@ -9,6 +9,7 @@ import { rankTagsByQuery } from '../utils/search';
 import { ResultItemCard } from '../components/ResultItemCard';
 import { ImageViewerModal } from '../components/ImageViewerModal';
 import { EditMediaModal } from '../components/EditMediaModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const SearchResults: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -31,6 +32,9 @@ export const SearchResults: React.FC = () => {
 
   // Admin Edit Modal state
   const [editingMediaItem, setEditingMediaItem] = useState<MediaItem | null>(null);
+
+  // Delete confirmation modal state
+  const [deletingMediaItem, setDeletingMediaItem] = useState<MediaItem | null>(null);
 
   const loadTags = useCallback(async () => {
     try {
@@ -89,12 +93,11 @@ export const SearchResults: React.FC = () => {
     }
   };
 
-  const handleDeleteMedia = async (item: MediaItem) => {
-    const confirmed = window.confirm('Are you sure you want to delete this media item permanently?');
-    if (!confirmed) return;
-
+  // Confirm and execute delete
+  const confirmDeleteMedia = async () => {
+    if (!deletingMediaItem) return;
     try {
-      await deleteMediaRecord(item.id);
+      await deleteMediaRecord(deletingMediaItem.id);
       toast.success('Media item deleted permanently!');
       await loadTags();
       if (selectedTag) {
@@ -103,6 +106,8 @@ export const SearchResults: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to delete media item:', err);
       toast.error(`Failed to delete: ${err.message}`);
+    } finally {
+      setDeletingMediaItem(null);
     }
   };
 
@@ -234,7 +239,7 @@ export const SearchResults: React.FC = () => {
                         item={item}
                         onClick={() => setActiveMediaItem(item)}
                         onEdit={isAdmin ? () => setEditingMediaItem(item) : undefined}
-                        onDelete={isAdmin ? () => handleDeleteMedia(item) : undefined}
+                        onDelete={isAdmin ? () => setDeletingMediaItem(item) : undefined}
                       />
                     ))}
                   </div>
@@ -267,6 +272,17 @@ export const SearchResults: React.FC = () => {
           item={editingMediaItem}
           onClose={() => setEditingMediaItem(null)}
           onSaved={handleMediaSaved}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingMediaItem && (
+        <ConfirmModal
+          title="Delete Proof Image"
+          message="This action cannot be undone. The image and its associations will be permanently removed."
+          confirmLabel="Delete Permanently"
+          onConfirm={confirmDeleteMedia}
+          onCancel={() => setDeletingMediaItem(null)}
         />
       )}
     </div>

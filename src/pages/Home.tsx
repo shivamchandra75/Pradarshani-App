@@ -7,6 +7,7 @@ import type { MediaItem } from '../types/database';
 import { deleteMediaRecord } from '../services/mediaService';
 import { ImageViewerModal } from '../components/ImageViewerModal';
 import { EditMediaModal } from '../components/EditMediaModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { FolderExplorer } from '../components/FolderExplorer';
 
 export const Home: React.FC = () => {
@@ -19,6 +20,9 @@ export const Home: React.FC = () => {
   // Admin Edit Modal state
   const [editingMediaItem, setEditingMediaItem] = useState<MediaItem | null>(null);
 
+  // Delete confirmation modal state
+  const [deletingMediaItem, setDeletingMediaItem] = useState<MediaItem | null>(null);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -29,17 +33,17 @@ export const Home: React.FC = () => {
     setEditingMediaItem(null);
   };
 
-  // Handler for deleting a media item from folder explorer cards
-  const handleDeleteMedia = async (item: MediaItem) => {
-    const confirmed = window.confirm('Are you sure you want to delete this media item permanently?');
-    if (!confirmed) return;
-
+  // Confirm and execute delete
+  const confirmDeleteMedia = async () => {
+    if (!deletingMediaItem) return;
     try {
-      await deleteMediaRecord(item.id);
+      await deleteMediaRecord(deletingMediaItem.id);
       toast.success('Media item deleted permanently!');
     } catch (err: any) {
       console.error('Failed to delete media item:', err);
       toast.error(`Failed to delete: ${err.message}`);
+    } finally {
+      setDeletingMediaItem(null);
     }
   };
 
@@ -47,27 +51,27 @@ export const Home: React.FC = () => {
     <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* Header & Search Bar */}
       <header className="bg-white py-6 px-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+        <div className="max-w-4xl mx-auto flex items-center gap-4 mb-4">
+          <h1 className="flex-1 text-3xl font-extrabold text-gray-900 tracking-tight">
             Praman
           </h1>
-          <div className="flex items-center space-x-3">
-            {isAdmin && (
-              <button
-                onClick={() => navigate('/admin')}
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-              >
-                Admin Dashboard
-              </button>
-            )}
+
+          {isAdmin && (
             <button
-              onClick={handleLogout}
-              className="flex items-center space-x-1 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => navigate('/admin')}
+              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800  py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
             >
-              <LogOut size={16} />
-              <span>Logout</span>
+              Dashboard
             </button>
-          </div>
+          )}
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
         </div>
 
         <div className="max-w-3xl mx-auto text-center space-y-4">
@@ -89,7 +93,7 @@ export const Home: React.FC = () => {
             isAdmin={isAdmin}
             onSelectMedia={(item) => setActiveMediaItem(item)}
             onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
-            onDeleteMedia={isAdmin ? (item) => handleDeleteMedia(item) : undefined}
+            onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
           />
         </div>
       </main>
@@ -116,6 +120,17 @@ export const Home: React.FC = () => {
           item={editingMediaItem}
           onClose={() => setEditingMediaItem(null)}
           onSaved={handleMediaSaved}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingMediaItem && (
+        <ConfirmModal
+          title="Delete Proof Image"
+          message="This action cannot be undone. The image and its associations will be permanently removed."
+          confirmLabel="Delete Permanently"
+          onConfirm={confirmDeleteMedia}
+          onCancel={() => setDeletingMediaItem(null)}
         />
       )}
     </div>

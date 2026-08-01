@@ -248,7 +248,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   return (
     <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden transition-all">
       {/* Compact 1-Line Breadcrumb */}
-      <div className="bg-gray-50/60 border-b border-gray-100 px-3 sm:px-4 py-2.5 flex items-center space-x-1 overflow-x-auto no-scrollbar text-xs sm:text-sm font-medium whitespace-nowrap">
+      <div className="bg-gray-50/60 border-b border-gray-100 px-3 sm:px-4 py-2.5 flex items-center flex-wrap gap-y-1 space-x-1 text-xs sm:text-sm font-medium">
         {path.map((step, idx) => {
           const isLast = idx === path.length - 1;
           return (
