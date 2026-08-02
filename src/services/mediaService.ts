@@ -334,3 +334,74 @@ export async function deleteMediaRecord(mediaId: string): Promise<void> {
   await cleanupOrphanTags();
 }
 
+export interface BookTreeNode extends Book {
+  mediaCount?: number;
+}
+
+export interface CategoryTreeNode extends BookCategory {
+  books: BookTreeNode[];
+}
+
+export interface ReligionTreeNode extends Religion {
+  categories: CategoryTreeNode[];
+}
+
+/**
+ * Single optimized batch query fetching all religions, nested categories, and nested books
+ */
+export async function fetchFolderTree(): Promise<ReligionTreeNode[]> {
+  const { data, error } = await supabase
+    .from('religions')
+    .select(`
+      id,
+      name,
+      categories:book_categories (
+        id,
+        name,
+        religion_id,
+        books:books (
+          id,
+          name,
+          category_id,
+          cover_image_url
+        )
+      )
+    `)
+    .order('name');
+
+  if (error) throw error;
+  return (data as unknown as ReligionTreeNode[]) || [];
+}
+
+/**
+ * Fetches all media records attached to a specific book ID with full joined metadata
+ */
+export async function fetchMediaByBookId(bookId: string): Promise<MediaItem[]> {
+  const { data, error } = await supabase
+    .from('media')
+    .select(`
+      id,
+      image_url,
+      description,
+      created_at,
+      book:book_id (
+        id,
+        name,
+        cover_image_url,
+        category:category_id (
+          id,
+          name,
+          religion:religion_id (
+            id,
+            name
+          )
+        )
+      )
+    `)
+    .eq('book_id', bookId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as unknown as MediaItem[]) || [];
+}
+
