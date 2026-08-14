@@ -8,6 +8,7 @@ interface FolderCardProps {
   /** If true, renders a book cover thumbnail instead of a folder icon */
   isBook?: boolean;
   onClick: () => void;
+  onEdit?: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -20,13 +21,15 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   coverImageUrl,
   isBook = false,
   onClick,
+  onEdit,
 }) => {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-blue-50/40 hover:bg-blue-50 border border-blue-50/40 hover:border-blue-100 transition-all duration-200 group text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-xs"
-    >
+    <div className="relative group">
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full h-full flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-blue-50/40 hover:bg-blue-50 border border-blue-50/40 hover:border-blue-100 transition-all duration-200 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-xs"
+      >
       {isBook ? (
         /* Book Cover Thumbnail */
         <div className="w-12 h-16 sm:w-14 sm:h-18 bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden flex items-center justify-center mb-2 group-hover:scale-105 transition-transform duration-200">
@@ -52,6 +55,19 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       <span className="text-[10px] sm:text-xs text-gray-400 font-medium mt-0.5">
         {subtitle}
       </span>
-    </button>
+      </button>
+
+      {onEdit && (
+        <button
+          onClick={onEdit}
+          className="absolute top-2 right-2 p-1.5 bg-white border border-gray-200 text-gray-500 hover:text-indigo-600 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          title="Edit Book"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
+      )}
+    </div>
   );
 };

@@ -5,6 +5,7 @@ import { LogOut, Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
 import type { Religion, BookCategory, Book, Tag } from '../types/database';
+import { compressImageIfNeeded } from '../utils/imageCompression';
 import {
   fetchReligions,
   addReligion,
@@ -59,13 +60,12 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [message]);
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl text-red-600 font-semibold">Access Denied. Admin privileges required.</p>
-      </div>
-    );
-  }
+  // Auto-scroll to error/success message whenever it changes
+  useEffect(() => {
+    if (message) {
+      messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [message]);
 
   // Load initial religions and tags
   useEffect(() => {
@@ -117,6 +117,14 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [selectedCategoryId]);
 
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-xl text-red-600 font-semibold">Access Denied. Admin privileges required.</p>
+      </div>
+    );
+  }
+
   // Handle Proof Image File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -150,7 +158,8 @@ export const AdminDashboard: React.FC = () => {
     try {
       let coverUrl: string | null = null;
       if (newBookCoverFile) {
-        coverUrl = await uploadImageFile(newBookCoverFile, 'covers');
+        const compressedFile = await compressImageIfNeeded(newBookCoverFile);
+        coverUrl = await uploadImageFile(compressedFile, 'covers');
       }
 
       const createdBook = await addBook(newBookName, selectedCategoryId, coverUrl);
@@ -205,8 +214,9 @@ export const AdminDashboard: React.FC = () => {
     setMessage(null);
 
     try {
-      // 1. Upload proof image to Supabase Storage
-      const uploadedUrl = await uploadImageFile(selectedFile, 'proofs');
+      // 1. Compress image and Upload proof image to Supabase Storage
+      const compressedFile = await compressImageIfNeeded(selectedFile);
+      const uploadedUrl = await uploadImageFile(compressedFile, 'proofs');
 
       // 2. Insert media record & link tags in DB
       await createMediaRecord(uploadedUrl, description, selectedBookId, selectedTagIds);

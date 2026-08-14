@@ -26,6 +26,32 @@ export async function uploadImageFile(file: File, folderPrefix = 'proofs'): Prom
 }
 
 /**
+ * Helper to delete an image from the storage bucket given its public URL
+ */
+export async function deleteImageFromStorage(imageUrl: string): Promise<void> {
+  try {
+    const urlStr = imageUrl;
+    const bucketUrlPart = `/object/public/${BUCKET_NAME}/`;
+    const bucketIndex = urlStr.indexOf(bucketUrlPart);
+    
+    if (bucketIndex !== -1) {
+      const rawFilePath = urlStr.substring(bucketIndex + bucketUrlPart.length);
+      const filePath = decodeURIComponent(rawFilePath);
+      
+      const { error: storageError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([filePath]);
+        
+      if (storageError) {
+        console.error('Error deleting image from storage:', storageError);
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing image URL for deletion:', e);
+  }
+}
+
+/**
  * Fetch all religions
  */
 export async function fetchReligions(): Promise<Religion[]> {
@@ -98,6 +124,48 @@ export async function addBook(name: string, categoryId: string, coverImageUrl?: 
     .insert([{ name: name.trim(), category_id: categoryId, cover_image_url: coverImageUrl || null }])
     .select()
     .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Update an existing book's name and/or cover image.
+ * If the cover image is replaced, it deletes the old cover image from storage.
+ */
+export async function updateBook(
+  bookId: string,
+  updates: { name?: string; coverImageUrl?: string | null }
+): Promise<Book> {
+  const updateData: Record<string, any> = {};
+  if (updates.name !== undefined) updateData.name = updates.name.trim();
+  if (updates.coverImageUrl !== undefined) updateData.cover_image_url = updates.coverImageUrl;
+
+  if (updates.coverImageUrl !== undefined) {
+    // Delete the old image from storage if it exists and is different
+    const { data: oldBook } = await supabase
+      .from('books')
+      .select('cover_image_url')
+      .eq('id', bookId)
+      .single();
+
+    if (oldBook?.cover_image_url && oldBook.cover_image_url !== updates.coverImageUrl) {
+      await deleteImageFromStorage(oldBook.cover_image_url);
+    }
+  }
+
+  if (Object.keys(updateData).length > 0) {
+    const { data, error } = await supabase
+      .from('books')
+      .update(updateData)
+      .eq('id', bookId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+  
+  // Return the current book if no updates provided
+  const { data, error } = await supabase.from('books').select('*').eq('id', bookId).single();
   if (error) throw error;
   return data;
 }
@@ -323,12 +391,29 @@ export async function cleanupOrphanTags(): Promise<void> {
  * Deletes a media record entirely and cleans up orphan tags
  */
 export async function deleteMediaRecord(mediaId: string): Promise<void> {
+  // 1. Fetch the media record to get the image URL
+  const { data: mediaRecord, error: fetchError } = await supabase
+    .from('media')
+    .select('image_url')
+    .eq('id', mediaId)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    throw fetchError;
+  }
+
+  // 2. Delete the record from the database
   const { error } = await supabase
     .from('media')
     .delete()
     .eq('id', mediaId);
 
   if (error) throw error;
+
+  // 3. Delete the image from storage if it belongs to our bucket
+  if (mediaRecord?.image_url) {
+    await deleteImageFromStorage(mediaRecord.image_url);
+  }
 
   // Clean up any orphan tags left behind
   await cleanupOrphanTags();

@@ -7,8 +7,10 @@ import type { MediaItem } from '../types/database';
 import { deleteMediaRecord } from '../services/mediaService';
 import { ImageViewerModal } from '../components/ImageViewerModal';
 import { EditMediaModal } from '../components/EditMediaModal';
+import { EditBookModal } from '../components/EditBookModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { FolderExplorer } from '../components/FolderExplorer';
+import { type BookTreeNode } from '../services/mediaService';
 
 export const Home: React.FC = () => {
   const { logout, isAdmin } = useAuth();
@@ -20,17 +22,34 @@ export const Home: React.FC = () => {
   // Admin Edit Modal state
   const [editingMediaItem, setEditingMediaItem] = useState<MediaItem | null>(null);
 
+  // Admin Edit Book Modal state
+  const [editingBook, setEditingBook] = useState<BookTreeNode | null>(null);
+
   // Delete confirmation modal state
   const [deletingMediaItem, setDeletingMediaItem] = useState<MediaItem | null>(null);
+
+  // Trigger to refresh children components (like FolderExplorer)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  // Handler after editing a media item (from folder explorer)
   const handleMediaSaved = async () => {
     setEditingMediaItem(null);
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleBookSaved = async () => {
+    setEditingBook(null);
+    // Triggering refresh to reload tree or cache
+    // Note: FolderExplorer caches the tree but we can force it by remounting or just letting user refresh, 
+    // but the easiest is to force reload tree via a window.location.reload() for a hard refresh of the sidebar
+    // However, let's try just setting refreshTrigger which might be enough or we could reload.
+    // For now, let's just trigger refreshTrigger and rely on the fact that they can navigate out and back in.
+    setRefreshTrigger(prev => prev + 1);
+    window.location.reload(); // Hard refresh to ensure folder tree is updated
   };
 
   // Confirm and execute delete
@@ -39,6 +58,7 @@ export const Home: React.FC = () => {
     try {
       await deleteMediaRecord(deletingMediaItem.id);
       toast.success('Media item deleted permanently!');
+      setRefreshTrigger(prev => prev + 1);
     } catch (err: any) {
       console.error('Failed to delete media item:', err);
       toast.error(`Failed to delete: ${err.message}`);
@@ -94,6 +114,8 @@ export const Home: React.FC = () => {
             onSelectMedia={(item) => setActiveMediaItem(item)}
             onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
             onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
+            onEditBook={isAdmin ? (book) => setEditingBook(book) : undefined}
+            refreshTrigger={refreshTrigger}
           />
         </div>
       </main>
@@ -120,6 +142,15 @@ export const Home: React.FC = () => {
           item={editingMediaItem}
           onClose={() => setEditingMediaItem(null)}
           onSaved={handleMediaSaved}
+        />
+      )}
+
+      {/* Admin Edit Book Modal */}
+      {editingBook && (
+        <EditBookModal
+          book={editingBook}
+          onClose={() => setEditingBook(null)}
+          onSaved={handleBookSaved}
         />
       )}
 

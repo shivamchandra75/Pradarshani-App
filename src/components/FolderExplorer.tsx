@@ -16,6 +16,8 @@ interface FolderExplorerProps {
   onSelectMedia: (item: MediaItem) => void;
   onEditMedia?: (item: MediaItem) => void;
   onDeleteMedia?: (item: MediaItem) => void;
+  onEditBook?: (book: BookTreeNode) => void;
+  refreshTrigger?: number;
 }
 
 interface BreadcrumbStep {
@@ -29,6 +31,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   onSelectMedia,
   onEditMedia,
   onDeleteMedia,
+  onEditBook,
+  refreshTrigger = 0,
 }) => {
   const [tree, setTree] = useState<ReligionTreeNode[]>([]);
   const [loadingTree, setLoadingTree] = useState(true);
@@ -93,6 +97,17 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
       }
     }
   }, [currentLevel, selectedBook, bookMediaCache]);
+
+  // Handle refresh trigger to clear cache and force refetch
+  useEffect(() => {
+    if (refreshTrigger > 0 && currentLevel === 3 && selectedBook) {
+      setBookMediaCache((prev) => {
+        const next = { ...prev };
+        delete next[selectedBook.id];
+        return next;
+      });
+    }
+  }, [refreshTrigger, currentLevel, selectedBook]);
 
   // Navigation handlers
   const navigateToBreadcrumb = (index: number) => {
@@ -163,6 +178,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           isBook: true,
           coverImageUrl: b.cover_image_url,
           onClick: () => openBook(b),
+          onEdit: isAdmin && onEditBook ? (e) => { e.stopPropagation(); onEditBook(b); } : undefined,
         })),
         `${items.length} ${items.length === 1 ? 'Book' : 'Books'}`,
         items.length === 0 ? `No books under ${selectedCategory.name}.` : undefined,
@@ -180,6 +196,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
       isBook?: boolean;
       coverImageUrl?: string | null;
       onClick: () => void;
+      onEdit?: (e: React.MouseEvent) => void;
     }>,
     countLabel: string,
     emptyMessage?: string,
@@ -200,6 +217,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
               isBook={f.isBook}
               coverImageUrl={f.coverImageUrl}
               onClick={f.onClick}
+              onEdit={f.onEdit}
             />
           ))}
         </div>
