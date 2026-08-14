@@ -3,6 +3,7 @@ import type { MediaItem, Religion, BookCategory, Book, Tag } from '../types/data
 import { X, Upload, Plus, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from './SearchableSelect';
+import { compressImageIfNeeded } from '../utils/imageCompression';
 import {
   fetchReligions,
   addReligion,
@@ -153,7 +154,8 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
     try {
       let coverUrl: string | null = null;
       if (newBookCoverFile) {
-        coverUrl = await uploadImageFile(newBookCoverFile, 'covers');
+        const compressedFile = await compressImageIfNeeded(newBookCoverFile);
+        coverUrl = await uploadImageFile(compressedFile, 'covers');
       }
 
       const createdBook = await addBook(newBookName, selectedCategoryId, coverUrl);
@@ -207,7 +209,8 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
     try {
       let finalImageUrl = item.image_url;
       if (replacementFile) {
-        finalImageUrl = await uploadImageFile(replacementFile, 'proofs');
+        const compressedFile = await compressImageIfNeeded(replacementFile);
+        finalImageUrl = await uploadImageFile(compressedFile, 'proofs');
       }
 
       await updateMediaRecord(item.id, {

@@ -323,12 +323,50 @@ export async function cleanupOrphanTags(): Promise<void> {
  * Deletes a media record entirely and cleans up orphan tags
  */
 export async function deleteMediaRecord(mediaId: string): Promise<void> {
+  // 1. Fetch the media record to get the image URL
+  const { data: mediaRecord, error: fetchError } = await supabase
+    .from('media')
+    .select('image_url')
+    .eq('id', mediaId)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    throw fetchError;
+  }
+
+  // 2. Delete the record from the database
   const { error } = await supabase
     .from('media')
     .delete()
     .eq('id', mediaId);
 
   if (error) throw error;
+
+  // 3. Delete the image from storage if it belongs to our bucket
+  if (mediaRecord?.image_url) {
+    try {
+      const urlStr = mediaRecord.image_url;
+      const bucketUrlPart = `/object/public/${BUCKET_NAME}/`;
+      const bucketIndex = urlStr.indexOf(bucketUrlPart);
+      
+      if (bucketIndex !== -1) {
+        // Extract the file path which is everything after the bucketUrlPart and decode it
+        const rawFilePath = urlStr.substring(bucketIndex + bucketUrlPart.length);
+        const filePath = decodeURIComponent(rawFilePath);
+        
+        // Remove from storage
+        const { error: storageError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .remove([filePath]);
+          
+        if (storageError) {
+          console.error('Error deleting image from storage:', storageError);
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing image URL for deletion:', e);
+    }
+  }
 
   // Clean up any orphan tags left behind
   await cleanupOrphanTags();

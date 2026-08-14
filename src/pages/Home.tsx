@@ -23,14 +23,17 @@ export const Home: React.FC = () => {
   // Delete confirmation modal state
   const [deletingMediaItem, setDeletingMediaItem] = useState<MediaItem | null>(null);
 
+  // Trigger to refresh children components (like FolderExplorer)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  // Handler after editing a media item (from folder explorer)
   const handleMediaSaved = async () => {
     setEditingMediaItem(null);
+    setRefreshTrigger(prev => prev + 1);
   };
 
   // Confirm and execute delete
@@ -39,6 +42,7 @@ export const Home: React.FC = () => {
     try {
       await deleteMediaRecord(deletingMediaItem.id);
       toast.success('Media item deleted permanently!');
+      setRefreshTrigger(prev => prev + 1);
     } catch (err: any) {
       console.error('Failed to delete media item:', err);
       toast.error(`Failed to delete: ${err.message}`);
@@ -94,6 +98,7 @@ export const Home: React.FC = () => {
             onSelectMedia={(item) => setActiveMediaItem(item)}
             onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
             onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
+            refreshTrigger={refreshTrigger}
           />
         </div>
       </main>

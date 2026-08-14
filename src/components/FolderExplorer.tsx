@@ -16,6 +16,7 @@ interface FolderExplorerProps {
   onSelectMedia: (item: MediaItem) => void;
   onEditMedia?: (item: MediaItem) => void;
   onDeleteMedia?: (item: MediaItem) => void;
+  refreshTrigger?: number;
 }
 
 interface BreadcrumbStep {
@@ -29,6 +30,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   onSelectMedia,
   onEditMedia,
   onDeleteMedia,
+  refreshTrigger = 0,
 }) => {
   const [tree, setTree] = useState<ReligionTreeNode[]>([]);
   const [loadingTree, setLoadingTree] = useState(true);
@@ -93,6 +95,17 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
       }
     }
   }, [currentLevel, selectedBook, bookMediaCache]);
+
+  // Handle refresh trigger to clear cache and force refetch
+  useEffect(() => {
+    if (refreshTrigger > 0 && currentLevel === 3 && selectedBook) {
+      setBookMediaCache((prev) => {
+        const next = { ...prev };
+        delete next[selectedBook.id];
+        return next;
+      });
+    }
+  }, [refreshTrigger]);
 
   // Navigation handlers
   const navigateToBreadcrumb = (index: number) => {
