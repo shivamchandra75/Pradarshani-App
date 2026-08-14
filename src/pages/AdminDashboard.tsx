@@ -60,13 +60,12 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [message]);
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl text-red-600 font-semibold">Access Denied. Admin privileges required.</p>
-      </div>
-    );
-  }
+  // Auto-scroll to error/success message whenever it changes
+  useEffect(() => {
+    if (message) {
+      messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [message]);
 
   // Load initial religions and tags
   useEffect(() => {
@@ -117,6 +116,14 @@ export const AdminDashboard: React.FC = () => {
         .catch(console.error);
     }
   }, [selectedCategoryId]);
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-xl text-red-600 font-semibold">Access Denied. Admin privileges required.</p>
+      </div>
+    );
+  }
 
   // Handle Proof Image File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
