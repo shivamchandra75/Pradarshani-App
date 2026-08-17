@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, LogOut } from 'lucide-react';
+import { Search, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -81,7 +81,7 @@ export const Home: React.FC = () => {
               onClick={() => navigate('/admin')}
               className="text-sm font-semibold text-indigo-600 hover:text-indigo-800  py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
             >
-              Dashboard
+              <LayoutDashboard />
             </button>
           )}
 
@@ -90,7 +90,6 @@ export const Home: React.FC = () => {
             className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <LogOut size={16} />
-            <span>Logout</span>
           </button>
         </div>
 

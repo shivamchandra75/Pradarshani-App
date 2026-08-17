@@ -69,7 +69,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+      {label && <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>}
 
       {/* Selected Box Trigger */}
       <button
