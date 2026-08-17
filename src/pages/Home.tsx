@@ -79,7 +79,7 @@ export const Home: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800  py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+              className="text-sm font-semibold text-gray-800 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <LayoutDashboard />
             </button>
@@ -106,17 +106,15 @@ export const Home: React.FC = () => {
       </header>
 
       {/* Main Content: Folder Directory Explorer */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="pt-2">
-          <FolderExplorer
-            isAdmin={isAdmin}
-            onSelectMedia={(item) => setActiveMediaItem(item)}
-            onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
-            onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
-            onEditBook={isAdmin ? (book) => setEditingBook(book) : undefined}
-            refreshTrigger={refreshTrigger}
-          />
-        </div>
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <FolderExplorer
+          isAdmin={isAdmin}
+          onSelectMedia={(item) => setActiveMediaItem(item)}
+          onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
+          onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
+          onEditBook={isAdmin ? (book) => setEditingBook(book) : undefined}
+          refreshTrigger={refreshTrigger}
+        />
       </main>
 
       {/* Lightbox Image Viewer Modal */}

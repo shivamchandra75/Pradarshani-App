@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Upload, Plus, X, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import {  Upload, Plus, X, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
 import type { Religion, BookCategory, Book, Tag } from '../types/database';
@@ -20,7 +20,7 @@ import {
 } from '../services/mediaService';
 
 export const AdminDashboard: React.FC = () => {
-  const { isAdmin, logout } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Form states
@@ -244,11 +244,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
   // Format options for SearchableSelect
   const religionOptions: SelectOption[] = religions.map(r => ({ id: r.id, name: r.name }));
   const categoryOptions: SelectOption[] = categories.map(c => ({ id: c.id, name: c.name }));
@@ -263,28 +258,20 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pb-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors sm:pl-0 sm:pr-3"
-            >
-              <ArrowLeft />
-            </button>
-          <h1 className="text-3xl font-extrabold text-gray-900">Dashboard</h1>
+        <div className="flex justify-start items-center my-6 gap-4">
+          <button
+            onClick={() => navigate('/')}
+            className="p-2 text-gray-800 bg-gray-100  hover:bg-gray-200 rounded-full transition-colors shrink-0"
+            title="Back to Home"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
 
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-1.5 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900">Dashboard</h2>
         </div>
 
-        {/* Upload Form Card */}
         <div className="rounded-2xl">
           {message && (
             <div
@@ -436,7 +423,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Tag Search & Add Bar */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -449,7 +436,7 @@ export const AdminDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleAddNewTag}
-                      className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-1"
+                      className="px-4 py-2 min-w-fit bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-1"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add Tag</span>
