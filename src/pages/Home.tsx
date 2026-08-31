@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, LogOut } from 'lucide-react';
+import { Search, Upload  } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -10,10 +10,11 @@ import { EditMediaModal } from '../components/EditMediaModal';
 import { EditBookModal } from '../components/EditBookModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { FolderExplorer } from '../components/FolderExplorer';
+import { Header } from '../components/Header';
 import { type BookTreeNode } from '../services/mediaService';
 
 export const Home: React.FC = () => {
-  const { logout, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Lightbox Modal state
@@ -30,11 +31,6 @@ export const Home: React.FC = () => {
 
   // Trigger to refresh children components (like FolderExplorer)
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
 
   const handleMediaSaved = async () => {
     setEditingMediaItem(null);
@@ -69,55 +65,51 @@ export const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Header & Search Bar */}
-      <header className="bg-white py-6 px-4">
-        <div className="max-w-4xl mx-auto flex items-center gap-4 mb-4">
-          <h1 className="flex-1 text-3xl font-extrabold text-gray-900 tracking-tight">
-            Praman
-          </h1>
+      <Header />
 
-          {isAdmin && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800  py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-            >
-              Dashboard
-            </button>
-          )}
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
-        </div>
-
+      {/* Search Bar Segment */}
+      <div className="bg-white px-4 pb-6">
         <div className="max-w-3xl mx-auto text-center space-y-4">
-
           <div
             onClick={() => navigate('/search')}
-            className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 transition-all cursor-text"
+            className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 transition-all cursor-text shadow-sm hover:shadow-md"
           >
             <Search className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
             <span className="text-base sm:text-lg text-gray-400 select-none">Tap here to search</span>
           </div>
         </div>
-      </header>
+      </div>
+
+      {/* Admin Action Card (Material 3 Style) */}
+      {isAdmin && (
+        <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+          <button 
+            onClick={() => navigate('/admin/uploads')}
+            className="w-full group flex items-center p-4 bg-orange-50 hover:bg-orange-100/80 rounded-[28px] transition-all duration-200 border border-orange-100/50 shadow-sm hover:shadow-md"
+          >
+            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-orange-200/50 group-hover:bg-orange-200 rounded-full mr-4 text-orange-700 transition-colors">
+              <Upload className="w-6 h-6" />
+            </div>
+            <div className="text-left flex-1">
+              <h3 className="text-base font-semibold text-orange-800 tracking-tight">Upload Images</h3>
+              <p className="text-sm text-orange-700/80 font-medium">Add new proofs / praman </p>
+            </div>
+          </button>
+
+        </div>
+      )}
 
       {/* Main Content: Folder Directory Explorer */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="pt-2">
-          <FolderExplorer
-            isAdmin={isAdmin}
-            onSelectMedia={(item) => setActiveMediaItem(item)}
-            onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
-            onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
-            onEditBook={isAdmin ? (book) => setEditingBook(book) : undefined}
-            refreshTrigger={refreshTrigger}
-          />
-        </div>
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <h3 className='text-lg font-semibold'>Folder view</h3>
+        <FolderExplorer
+          isAdmin={isAdmin}
+          onSelectMedia={(item) => setActiveMediaItem(item)}
+          onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
+          onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
+          onEditBook={isAdmin ? (book) => setEditingBook(book) : undefined}
+          refreshTrigger={refreshTrigger}
+        />
       </main>
 
       {/* Lightbox Image Viewer Modal */}

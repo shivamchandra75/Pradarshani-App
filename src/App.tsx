@@ -33,7 +33,7 @@ function App() {
   return (
     <AuthProvider>
       <Toaster 
-        position="top-right" 
+        position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
@@ -65,7 +65,7 @@ function App() {
           <Route path="/login" element={<AdminLogin />} />
           <Route path="/register" element={<Register />} />
           <Route 
-            path="/admin"
+            path="/admin/uploads"
             element={
               <AdminRoute>
                 <AdminDashboard />

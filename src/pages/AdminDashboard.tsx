@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import {  Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
 import type { Religion, BookCategory, Book, Tag } from '../types/database';
@@ -18,10 +17,10 @@ import {
   uploadImageFile,
   createMediaRecord,
 } from '../services/mediaService';
+import { Header } from '../components/Header';
 
 export const AdminDashboard: React.FC = () => {
-  const { isAdmin, logout } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   // Form states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -244,11 +243,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
   // Format options for SearchableSelect
   const religionOptions: SelectOption[] = religions.map(r => ({ id: r.id, name: r.name }));
   const categoryOptions: SelectOption[] = categories.map(c => ({ id: c.id, name: c.name }));
@@ -263,33 +257,10 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-1">Upload proof images & manage relational metadata</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate('/')}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors"
-            >
-              Go to Search →
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center space-x-1.5 text-sm font-medium text-gray-600 hover:text-red-600 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Upload Form Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+    <div className="min-h-screen bg-gray-50 pb-4">
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="rounded-2xl">
           {message && (
             <div
               ref={messageRef}
@@ -311,8 +282,9 @@ export const AdminDashboard: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 1. Device Image Picker */}
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Proof Image (Upload from device gallery) *
+              <h4 className='font-semibold'>Proof Image</h4>
+              <label className="block text-xs font-semibold text-gray-400 mb-2">
+                Upload from device gallery
               </label>
               <div className="flex items-center justify-center w-full">
                 <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-indigo-50/50 hover:border-indigo-400 transition-all overflow-hidden relative">
@@ -331,9 +303,9 @@ export const AdminDashboard: React.FC = () => {
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <Upload className="w-10 h-10 text-indigo-400 mb-2" />
                       <p className="mb-1 text-sm text-gray-700 font-medium">
-                        Click or drag image here to upload
+                        Click here to upload
                       </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 10MB</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB</p>
                     </div>
                   )}
                   <input
@@ -364,7 +336,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
               {/* Religion Select */}
               <SearchableSelect
-                label="1. Religion *"
+                label="Religion"
                 options={religionOptions}
                 selectedValue={selectedReligionId}
                 onChange={setSelectedReligionId}
@@ -374,7 +346,7 @@ export const AdminDashboard: React.FC = () => {
 
               {/* Book Category Select */}
               <SearchableSelect
-                label="2. Book Category *"
+                label="Book Category"
                 options={categoryOptions}
                 selectedValue={selectedCategoryId}
                 onChange={setSelectedCategoryId}
@@ -386,7 +358,7 @@ export const AdminDashboard: React.FC = () => {
               {/* Book Name Select */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm font-semibold text-gray-800">3. Book Name *</label>
+                  <label className="text-sm font-semibold text-gray-800">Book Name</label>
                   {selectedCategoryId && (
                     <button
                       type="button"
@@ -410,8 +382,9 @@ export const AdminDashboard: React.FC = () => {
 
             {/* 4. Multi-Tag Selection */}
             <div className="pt-2">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Tags (Select existing or type new) *
+              <h4 className='font-semibold'>Tags</h4>
+              <label className="block text-xs font-semibold text-gray-400 mb-2">
+                 Select existing or type new
               </label>
 
               {/* Selected Tag Pills */}
@@ -438,7 +411,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Tag Search & Add Bar */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -451,7 +424,7 @@ export const AdminDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleAddNewTag}
-                      className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-1"
+                      className="px-4 py-2 min-w-fit bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-1"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add Tag</span>

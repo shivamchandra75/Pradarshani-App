@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabase';
 import { useNavigate, Link } from 'react-router-dom';
@@ -11,13 +11,15 @@ const AdminLogin: React.FC = () => {
   const [error, setError] = useState('');
 
   // If already logged in, redirect based on role
-  if (currentUser) {
-    if (isAdmin) {
-      navigate('/admin');
-    } else {
-      navigate('/');
+  useEffect(() => {
+    if (currentUser) {
+      if (isAdmin) {
+        navigate('/admin/uploads');
+      } else {
+        navigate('/');
+      }
     }
-  }
+  }, [currentUser, isAdmin, navigate]);
 
   const handleLogin = async (e: React.SubmitEvent) => {
     e.preventDefault();

@@ -208,7 +208,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
       {emptyMessage ? (
         <div className="py-12 text-center text-gray-400 text-sm">{emptyMessage}</div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4  gap-3 sm:gap-4">
           {folders.map((f) => (
             <FolderCard
               key={f.id}
@@ -264,9 +264,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden transition-all">
-      {/* Compact 1-Line Breadcrumb */}
-      <div className="bg-gray-50/60 border-b border-gray-100 px-3 sm:px-4 py-2.5 flex items-center flex-wrap gap-y-1 space-x-1 text-xs sm:text-sm font-medium">
+    <div className="bg-white overflow-hidden transition-all">
+      <div className="rounded-2xl bg-gray-50/60 px-3 sm:px-4 py-2.5 flex items-center flex-wrap gap-y-1 space-x-1 text-xs sm:text-sm font-medium">
         {path.map((step, idx) => {
           const isLast = idx === path.length - 1;
           return (
@@ -289,8 +288,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
         })}
       </div>
 
-      {/* Content Body */}
-      <div className="p-4 sm:p-5">
+      <div className="py-4 sm:py-5">
         {loadingTree ? (
           <div className="flex justify-center py-16">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
