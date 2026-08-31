@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import {  Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
@@ -22,7 +21,6 @@ import { Header } from '../components/Header';
 
 export const AdminDashboard: React.FC = () => {
   const { isAdmin } = useAuth();
-  const navigate = useNavigate();
 
   // Form states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

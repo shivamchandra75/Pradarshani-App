@@ -208,7 +208,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
       {emptyMessage ? (
         <div className="py-12 text-center text-gray-400 text-sm">{emptyMessage}</div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4  gap-3 sm:gap-4">
           {folders.map((f) => (
             <FolderCard
               key={f.id}

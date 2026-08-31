@@ -49,7 +49,7 @@ export const Header: React.FC = () => {
             onClick={() => {
               setShowLogoutConfirm(true);
             }}
-            className="text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-1 transition-colors font-medium"
+            className="text-left pl-4 pr-1 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-1 transition-colors font-medium"
           >
             <LogOut className="w-4 h-4" />
             <span>Logout</span>
