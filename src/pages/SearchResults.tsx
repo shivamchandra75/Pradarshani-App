@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Tag as TagIcon, Loader2, X, ArrowLeft } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Search, Tag as TagIcon, Loader2, X } from 'lucide-react';
+import {  useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import type { Tag, MediaItem } from '../types/database';
 import { fetchAllTags, fetchMediaByTagId, deleteMediaRecord } from '../services/mediaService';
@@ -10,10 +9,11 @@ import { ResultItemCard } from '../components/ResultItemCard';
 import { ImageViewerModal } from '../components/ImageViewerModal';
 import { EditMediaModal } from '../components/EditMediaModal';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { Header } from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 
 export const SearchResults: React.FC = () => {
   const { isAdmin } = useAuth();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialQuery = searchParams.get('q') || '';
@@ -130,18 +130,12 @@ export const SearchResults: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Search Header */}
-      <header className="bg-white py-4 px-4">
-        <div className="max-w-4xl mx-auto flex items-center space-x-3">
-          <button
-            onClick={() => navigate('/')}
-            className="p-3 text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors shrink-0"
-            title="Back to Home"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
+      <Header />
 
-          <div className="flex-1 flex items-center bg-white border border-gray-300 rounded-full px-4 py-3  transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 h-12">
+      {/* Search Header Content */}
+      <div className="bg-white py-4 px-4 border-b border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex-1 flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 h-12">
             <Search className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
             <input
               type="text"
@@ -163,7 +157,7 @@ export const SearchResults: React.FC = () => {
             )}
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">

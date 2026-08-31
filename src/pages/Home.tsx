@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, LogOut, LayoutDashboard } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -10,10 +10,11 @@ import { EditMediaModal } from '../components/EditMediaModal';
 import { EditBookModal } from '../components/EditBookModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { FolderExplorer } from '../components/FolderExplorer';
+import { Header } from '../components/Header';
 import { type BookTreeNode } from '../services/mediaService';
 
 export const Home: React.FC = () => {
-  const { logout, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Lightbox Modal state
@@ -30,11 +31,6 @@ export const Home: React.FC = () => {
 
   // Trigger to refresh children components (like FolderExplorer)
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
 
   const handleMediaSaved = async () => {
     setEditingMediaItem(null);
@@ -69,41 +65,20 @@ export const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Header & Search Bar */}
-      <header className="bg-white py-6 px-4">
-        <div className="max-w-4xl mx-auto flex items-center gap-4 mb-4">
-          <h1 className="flex-1 text-3xl font-extrabold text-gray-900 tracking-tight">
-            Praman
-          </h1>
+      <Header />
 
-          {isAdmin && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="text-sm font-semibold text-gray-800 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <LayoutDashboard />
-            </button>
-          )}
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <LogOut size={16} />
-          </button>
-        </div>
-
+      {/* Search Bar Segment */}
+      <div className="bg-white px-4 pb-6">
         <div className="max-w-3xl mx-auto text-center space-y-4">
-
           <div
             onClick={() => navigate('/search')}
-            className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 transition-all cursor-text"
+            className="relative max-w-2xl mx-auto flex items-center bg-white border border-gray-300 rounded-full px-4 py-3.5 transition-all cursor-text shadow-sm hover:shadow-md"
           >
             <Search className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
             <span className="text-base sm:text-lg text-gray-400 select-none">Tap here to search</span>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content: Folder Directory Explorer */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import {  Upload, Plus, X, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import {  Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
 import type { Religion, BookCategory, Book, Tag } from '../types/database';
@@ -18,6 +18,7 @@ import {
   uploadImageFile,
   createMediaRecord,
 } from '../services/mediaService';
+import { Header } from '../components/Header';
 
 export const AdminDashboard: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -258,20 +259,9 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen pb-4 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-start items-center my-6 gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 text-gray-800 bg-gray-100  hover:bg-gray-200 rounded-full transition-colors shrink-0"
-            title="Back to Home"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-
-          <h2 className="text-3xl font-extrabold text-gray-900">Dashboard</h2>
-        </div>
-
+    <div className="min-h-screen bg-gray-50 pb-4">
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="rounded-2xl">
           {message && (
             <div
