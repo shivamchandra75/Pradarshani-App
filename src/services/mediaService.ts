@@ -219,7 +219,7 @@ export async function addTag(name: string): Promise<Tag> {
  * Creates a media record and links it with multiple tags in media_tags
  */
 export async function createMediaRecord(
-  imageUrl: string,
+  imageUrls: string[],
   description: string | null,
   bookId: string,
   tagIds: string[]
@@ -227,7 +227,7 @@ export async function createMediaRecord(
   // 1. Insert media record
   const { data: mediaData, error: mediaError } = await supabase
     .from('media')
-    .insert([{ image_url: imageUrl, description: description?.trim() || null, book_id: bookId }])
+    .insert([{ image_urls: imageUrls, description: description?.trim() || null, book_id: bookId }])
     .select()
     .single();
 
@@ -257,7 +257,7 @@ export async function fetchMediaByTagId(tagId: string): Promise<MediaItem[]> {
     .select(`
       media:media_id (
         id,
-        image_url,
+        image_urls,
         description,
         created_at,
         book:book_id (
@@ -306,19 +306,19 @@ export async function fetchTagIdsForMedia(mediaId: string): Promise<string[]> {
 }
 
 /**
- * Updates a media record (image_url, description, book_id) and syncs its attached tags.
+ * Updates a media record (image_urls, description, book_id) and syncs its attached tags.
  */
 export async function updateMediaRecord(
   mediaId: string,
   updates: {
-    imageUrl?: string;
+    imageUrls?: string[];
     description?: string | null;
     bookId?: string;
     tagIds?: string[];
   }
 ): Promise<void> {
   const updateData: Record<string, any> = {};
-  if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
+  if (updates.imageUrls !== undefined) updateData.image_urls = updates.imageUrls;
   if (updates.description !== undefined) updateData.description = updates.description?.trim() || null;
   if (updates.bookId !== undefined) updateData.book_id = updates.bookId;
 
@@ -391,10 +391,10 @@ export async function cleanupOrphanTags(): Promise<void> {
  * Deletes a media record entirely and cleans up orphan tags
  */
 export async function deleteMediaRecord(mediaId: string): Promise<void> {
-  // 1. Fetch the media record to get the image URL
+  // 1. Fetch the media record to get the image URLs
   const { data: mediaRecord, error: fetchError } = await supabase
     .from('media')
-    .select('image_url')
+    .select('image_urls')
     .eq('id', mediaId)
     .single();
 
@@ -410,9 +410,11 @@ export async function deleteMediaRecord(mediaId: string): Promise<void> {
 
   if (error) throw error;
 
-  // 3. Delete the image from storage if it belongs to our bucket
-  if (mediaRecord?.image_url) {
-    await deleteImageFromStorage(mediaRecord.image_url);
+  // 3. Delete all images from storage
+  if (mediaRecord?.image_urls && Array.isArray(mediaRecord.image_urls)) {
+    for (const url of mediaRecord.image_urls) {
+      await deleteImageFromStorage(url);
+    }
   }
 
   // Clean up any orphan tags left behind
@@ -466,7 +468,7 @@ export async function fetchMediaByBookId(bookId: string): Promise<MediaItem[]> {
     .from('media')
     .select(`
       id,
-      image_url,
+      image_urls,
       description,
       created_at,
       book:book_id (

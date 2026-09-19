@@ -23,7 +23,7 @@ export interface Tag {
 
 export interface MediaItem {
   id: string;
-  image_url: string;
+  image_urls: string[];
   description: string | null;
   book_id: string | null;
   created_at: string;

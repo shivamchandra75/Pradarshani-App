@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ExternalLink, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageViewerModalProps {
-  imageUrl: string | null;
+  imageUrls: string[];
   bookName?: string;
   categoryReligion?: string;
   description?: string | null;
@@ -10,13 +10,14 @@ interface ImageViewerModalProps {
 }
 
 export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
-  imageUrl,
+  imageUrls,
   bookName,
   categoryReligion,
   description,
   onClose,
 }) => {
   const [showControls, setShowControls] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   // Zoom & Pan States
   const [scale, setScale] = useState(1);
@@ -31,21 +32,47 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   // Last tap time for double-tap detection
   const lastTapRef = useRef<number>(0);
 
-  // Keyboard Escape listener
+  const totalImages = imageUrls.length;
+  const currentUrl = imageUrls[currentIndex];
+
+  // Reset zoom when navigating between images
+  const resetZoomState = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const goToNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (currentIndex < totalImages - 1) {
+      setCurrentIndex(prev => prev + 1);
+      resetZoomState();
+    }
+  };
+
+  const goToPrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+      resetZoomState();
+    }
+  };
+
+  // Keyboard Escape & Arrow listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') goToNext();
+      if (e.key === 'ArrowLeft') goToPrev();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [onClose, currentIndex]);
 
-  if (!imageUrl) return null;
+  if (!imageUrls || imageUrls.length === 0) return null;
 
   const handleResetZoom = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
+    resetZoomState();
   };
 
   // Mouse wheel zoom
@@ -165,13 +192,18 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           <span>Back</span>
         </button>
 
-        {/* Center: Title & Category */}
+        {/* Center: Title & Category + Image Counter */}
         <div className="text-center px-4 max-w-md truncate">
           <h2 className="text-base sm:text-lg font-bold text-white truncate">
             {bookName || 'Proof Image'}
           </h2>
           {categoryReligion && (
             <p className="text-xs text-indigo-300 font-medium truncate">{categoryReligion}</p>
+          )}
+          {totalImages > 1 && (
+            <p className="text-xs text-white/70 font-mono mt-0.5">
+              {currentIndex + 1} / {totalImages}
+            </p>
           )}
         </div>
 
@@ -188,7 +220,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             </button>
           )}
           <a
-            href={imageUrl}
+            href={currentUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-1 px-3.5 py-1.5 bg-indigo-600/90 hover:bg-indigo-600 backdrop-blur-md rounded-full text-xs font-semibold text-white transition-colors shadow-sm"
@@ -213,7 +245,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         onTouchEnd={handleTouchEnd}
       >
         <img
-          src={imageUrl}
+          src={currentUrl}
           alt={description || bookName || 'Full screen proof image'}
           draggable={false}
           style={{
@@ -229,23 +261,67 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             {scale.toFixed(1)}x
           </div>
         )}
+
+        {/* Carousel Navigation Arrows */}
+        {totalImages > 1 && showControls && (
+          <>
+            {currentIndex > 0 && (
+              <button
+                type="button"
+                onClick={goToPrev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-black/50 hover:bg-black/70 backdrop-blur-md rounded-full text-white transition-all active:scale-90"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+            {currentIndex < totalImages - 1 && (
+              <button
+                type="button"
+                onClick={goToNext}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-black/50 hover:bg-black/70 backdrop-blur-md rounded-full text-white transition-all active:scale-90"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
+          </>
+        )}
       </div>
 
-      {/* 3. BOTTOM FLOATING DESCRIPTION OVERLAY */}
-      {description && (
-        <div
-          className={`absolute bottom-0 inset-x-0 z-20 px-6 py-4 bg-gradient-to-t from-black/90 via-black/70 to-transparent text-white transition-opacity duration-300 ${
-            showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="max-w-3xl mx-auto bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
-            <p className="text-sm sm:text-base text-gray-100 leading-relaxed font-normal">
-              {description}
-            </p>
-          </div>
+      {/* 3. BOTTOM: Dot Indicators + Description */}
+      <div
+        className={`absolute bottom-0 inset-x-0 z-20 bg-gradient-to-t from-black/90 via-black/70 to-transparent text-white transition-opacity duration-300 ${
+          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="max-w-3xl mx-auto px-6 py-4 space-y-3">
+          {/* Dot Indicators for Multi-Image */}
+          {totalImages > 1 && (
+            <div className="flex justify-center items-center space-x-2">
+              {imageUrls.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => { setCurrentIndex(idx); resetZoomState(); }}
+                  className={`rounded-full transition-all ${
+                    idx === currentIndex
+                      ? 'w-2.5 h-2.5 bg-white scale-110'
+                      : 'w-2 h-2 bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Description */}
+          {description && (
+            <div className="bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
+              <p className="text-sm sm:text-base text-gray-100 leading-relaxed font-normal">
+                {description}
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

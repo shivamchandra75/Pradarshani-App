@@ -23,8 +23,8 @@ export const AdminDashboard: React.FC = () => {
   const { isAdmin } = useAuth();
 
   // Form states
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [description, setDescription] = useState('');
 
   // Cascading relational states
@@ -124,13 +124,19 @@ export const AdminDashboard: React.FC = () => {
     );
   }
 
-  // Handle Proof Image File Selection
+  // Handle Proof Image File Selection (multi-file)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setImagePreviewUrl(URL.createObjectURL(file));
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+      const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+      setImagePreviewUrls(prev => [...prev, ...newPreviews]);
     }
+  };
+
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   // Add new religion inline
@@ -199,8 +205,8 @@ export const AdminDashboard: React.FC = () => {
   // Main Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
-      return setMessage({ type: 'error', text: 'Please select an image file to upload.' });
+    if (selectedFiles.length === 0) {
+      return setMessage({ type: 'error', text: 'Please select at least one image file to upload.' });
     }
     if (!selectedBookId) {
       return setMessage({ type: 'error', text: 'Please select a Book.' });
@@ -213,20 +219,24 @@ export const AdminDashboard: React.FC = () => {
     setMessage(null);
 
     try {
-      // 1. Compress image and Upload proof image to Supabase Storage
-      const compressedFile = await compressImageIfNeeded(selectedFile);
-      const uploadedUrl = await uploadImageFile(compressedFile, 'proofs');
+      // 1. Compress and upload all images
+      const uploadedUrls: string[] = [];
+      for (const file of selectedFiles) {
+        const compressedFile = await compressImageIfNeeded(file);
+        const url = await uploadImageFile(compressedFile, 'proofs');
+        uploadedUrls.push(url);
+      }
 
       // 2. Insert media record & link tags in DB
-      await createMediaRecord(uploadedUrl, description, selectedBookId, selectedTagIds);
+      await createMediaRecord(uploadedUrls, description, selectedBookId, selectedTagIds);
 
       // Trigger Toast notification
-      toast.success('Media proof successfully uploaded and linked!');
-      setMessage({ type: 'success', text: 'Media proof successfully uploaded and linked!' });
+      toast.success(`${uploadedUrls.length} image(s) successfully uploaded and linked!`);
+      setMessage({ type: 'success', text: `${uploadedUrls.length} image(s) successfully uploaded and linked!` });
 
       // Reset form completely for a fresh start
-      setSelectedFile(null);
-      setImagePreviewUrl(null);
+      setSelectedFiles([]);
+      setImagePreviewUrls([]);
       setDescription('');
       setSelectedReligionId('');
       setSelectedCategoryId('');
@@ -284,33 +294,45 @@ export const AdminDashboard: React.FC = () => {
             <div>
               <h4 className='font-semibold'>Proof Image</h4>
               <label className="block text-xs font-semibold text-gray-400 mb-2">
-                Upload from device gallery
+                Upload from device gallery (multiple allowed)
               </label>
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-indigo-50/50 hover:border-indigo-400 transition-all overflow-hidden relative">
-                  {imagePreviewUrl ? (
-                    <div className="w-full h-full relative group">
-                      <img
-                        src={imagePreviewUrl}
-                        alt="Selected Preview"
-                        className="w-full h-full object-contain p-2"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold">
-                        Click to change image
+
+              {/* Image Previews Grid */}
+              {imagePreviewUrls.length > 0 && (
+                <div className="flex flex-wrap gap-3 mb-3">
+                  {imagePreviewUrls.map((url, idx) => (
+                    <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm group">
+                      <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeSelectedFile(idx)}
+                        className="absolute top-1 right-1 p-0.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Remove image"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[10px] text-center font-mono py-0.5">
+                        {idx + 1}
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-10 h-10 text-indigo-400 mb-2" />
-                      <p className="mb-1 text-sm text-gray-700 font-medium">
-                        Click here to upload
-                      </p>
-                      <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB</p>
-                    </div>
-                  )}
+                  ))}
+                </div>
+              )}
+
+              {/* Upload Area */}
+              <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-indigo-50/50 hover:border-indigo-400 transition-all overflow-hidden relative">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Upload className="w-8 h-8 text-indigo-400 mb-2" />
+                    <p className="text-sm text-gray-700 font-medium">
+                      {selectedFiles.length > 0 ? `Add more images (${selectedFiles.length} selected)` : 'Click to select images'}
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB each</p>
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={handleFileChange}
                   />

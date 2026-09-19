@@ -27,8 +27,8 @@ interface EditMediaModalProps {
 export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, onSaved }) => {
   // Form states initialized with item values
   const [description, setDescription] = useState(item.description || '');
-  const [replacementFile, setReplacementFile] = useState<File | null>(null);
-  const [previewImageUrl, setPreviewImageUrl] = useState<string>(item.image_url);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [previewImageUrls, setPreviewImageUrls] = useState<string[]>(item.image_urls || []);
 
   // Relational cascading states
   const [religions, setReligions] = useState<Religion[]>([]);
@@ -122,11 +122,26 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
     }
   }, [selectedCategoryId]);
 
-  const handleReplacementFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setReplacementFile(file);
-      setPreviewImageUrl(URL.createObjectURL(file));
+  const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const addedFiles = Array.from(e.target.files);
+      setNewFiles(prev => [...prev, ...addedFiles]);
+      const addedPreviews = addedFiles.map(f => URL.createObjectURL(f));
+      setPreviewImageUrls(prev => [...prev, ...addedPreviews]);
+    }
+  };
+
+  const removePreviewImage = (index: number) => {
+    const removedUrl = previewImageUrls[index];
+    setPreviewImageUrls(prev => prev.filter((_, i) => i !== index));
+    // If it's a blob URL (newly added file), remove from newFiles too
+    if (removedUrl.startsWith('blob:')) {
+      // Find which newFile index this corresponds to
+      const blobUrls = previewImageUrls.filter(u => u.startsWith('blob:'));
+      const blobIdx = blobUrls.indexOf(removedUrl);
+      if (blobIdx !== -1) {
+        setNewFiles(prev => prev.filter((_, i) => i !== blobIdx));
+      }
     }
   };
 
@@ -207,14 +222,28 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
     setMessage(null);
 
     try {
-      let finalImageUrl = item.image_url;
-      if (replacementFile) {
-        const compressedFile = await compressImageIfNeeded(replacementFile);
-        finalImageUrl = await uploadImageFile(compressedFile, 'proofs');
+      // Build final image URLs array
+      // Keep existing (non-blob) URLs that are still in previewImageUrls
+      const existingUrls = previewImageUrls.filter(u => !u.startsWith('blob:'));
+      
+      // Upload all new files
+      const uploadedNewUrls: string[] = [];
+      for (const file of newFiles) {
+        const compressedFile = await compressImageIfNeeded(file);
+        const url = await uploadImageFile(compressedFile, 'proofs');
+        uploadedNewUrls.push(url);
+      }
+
+      const finalImageUrls = [...existingUrls, ...uploadedNewUrls];
+
+      if (finalImageUrls.length === 0) {
+        setMessage({ type: 'error', text: 'At least one image is required.' });
+        setLoading(false);
+        return;
       }
 
       await updateMediaRecord(item.id, {
-        imageUrl: finalImageUrl,
+        imageUrls: finalImageUrls,
         description: description,
         bookId: selectedBookId,
         tagIds: selectedTagIds,
@@ -284,37 +313,43 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
           )}
 
           <form id="edit-media-form" onSubmit={handleSave} className="space-y-6">
-            {/* 1. Image Preview & Replace */}
+            {/* 1. Image Preview & Manage */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Uploaded Proof Image
+                Proof Images ({previewImageUrls.length})
               </label>
-              <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <img
-                  src={previewImageUrl}
-                  alt="Proof preview"
-                  className="w-32 h-32 object-contain rounded-lg border border-gray-300 bg-white shadow-sm"
-                />
-                <div className="flex-1 space-y-2 text-center sm:text-left">
-                  <p className="text-xs text-gray-500">
-                    Replace this proof image by selecting a new file from your device:
-                  </p>
-                  <label className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer shadow-sm transition-all">
-                    <Upload className="w-4 h-4 text-indigo-600" />
-                    <span>{replacementFile ? 'Change Selected File' : 'Upload Replacement Image'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleReplacementFileChange}
-                    />
-                  </label>
-                  {replacementFile && (
-                    <p className="text-xs text-indigo-600 font-medium truncate">
-                      Selected: {replacementFile.name}
-                    </p>
-                  )}
-                </div>
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                {/* Image Grid */}
+                {previewImageUrls.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {previewImageUrls.map((url, idx) => (
+                      <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm group">
+                        <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removePreviewImage(idx)}
+                          className="absolute top-0.5 right-0.5 p-0.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove image"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add More Images */}
+                <label className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer shadow-sm transition-all">
+                  <Upload className="w-4 h-4 text-indigo-600" />
+                  <span>Add Images</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleAddFiles}
+                  />
+                </label>
               </div>
             </div>
 
