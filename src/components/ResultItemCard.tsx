@@ -1,6 +1,6 @@
 import React from 'react';
 import type { MediaItem } from '../types/database';
-import { BookOpen, Edit3, Trash2 } from 'lucide-react';
+import { BookOpen, Edit3, Trash2, Images } from 'lucide-react';
 
 interface ResultItemCardProps {
   item: MediaItem;
@@ -14,6 +14,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
   const categoryName = item.book?.category?.name || '';
   const religionName = item.book?.category?.religion?.name || '';
   const coverUrl = item.book?.cover_image_url;
+  const imageCount = item.image_urls?.length || 0;
 
   const categoryReligionString = [religionName, categoryName].filter(Boolean).join(' / ');
 
@@ -34,6 +35,14 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
           <div className="flex flex-col items-center justify-center p-3 text-indigo-300 group-hover:text-indigo-500 transition-colors">
             <BookOpen className="w-10 h-10 mb-1" />
             <span className="text-[10px] text-gray-400 text-center font-medium">No Cover</span>
+          </div>
+        )}
+
+        {/* Image count badge */}
+        {imageCount > 1 && (
+          <div className="absolute bottom-1.5 right-1.5 flex items-center space-x-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <Images className="w-3 h-3" />
+            <span>{imageCount}</span>
           </div>
         )}
       </div>

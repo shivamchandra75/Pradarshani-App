@@ -115,7 +115,7 @@ export const Home: React.FC = () => {
       {/* Lightbox Image Viewer Modal */}
       {activeMediaItem && (
         <ImageViewerModal
-          imageUrl={activeMediaItem.image_url}
+          imageUrls={activeMediaItem.image_urls}
           bookName={activeMediaItem.book?.name}
           categoryReligion={[
             activeMediaItem.book?.category?.religion?.name,
