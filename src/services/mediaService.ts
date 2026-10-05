@@ -259,6 +259,7 @@ export async function fetchMediaByTagId(tagId: string): Promise<MediaItem[]> {
         id,
         image_urls,
         description,
+        user_id,
         created_at,
         book:book_id (
           id,
@@ -470,6 +471,7 @@ export async function fetchMediaByBookId(bookId: string): Promise<MediaItem[]> {
       id,
       image_urls,
       description,
+      user_id,
       created_at,
       book:book_id (
         id,

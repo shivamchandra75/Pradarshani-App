@@ -18,6 +18,8 @@ import {
   updateMediaRecord,
 } from '../services/mediaService';
 
+import { useAuth } from '../context/AuthContext';
+
 interface EditMediaModalProps {
   item: MediaItem;
   onClose: () => void;
@@ -25,6 +27,7 @@ interface EditMediaModalProps {
 }
 
 export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, onSaved }) => {
+  const { isSuperAdmin } = useAuth();
   // Form states initialized with item values
   const [description, setDescription] = useState(item.description || '');
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -374,7 +377,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                 options={religionOptions}
                 selectedValue={selectedReligionId}
                 onChange={setSelectedReligionId}
-                onAddNew={handleAddNewReligion}
+                onAddNew={isSuperAdmin ? handleAddNewReligion : undefined}
                 placeholder="Select Religion"
               />
 
@@ -383,7 +386,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                 options={categoryOptions}
                 selectedValue={selectedCategoryId}
                 onChange={setSelectedCategoryId}
-                onAddNew={handleAddNewCategory}
+                onAddNew={isSuperAdmin ? handleAddNewCategory : undefined}
                 placeholder={selectedReligionId ? 'Select Category' : 'Select Religion first'}
                 disabled={!selectedReligionId}
               />
@@ -391,7 +394,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-gray-800">Book Name *</label>
-                  {selectedCategoryId && (
+                  {isSuperAdmin && selectedCategoryId && (
                     <button
                       type="button"
                       onClick={() => setShowAddBookModal(true)}

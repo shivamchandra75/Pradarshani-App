@@ -14,7 +14,7 @@ import { Header } from '../components/Header';
 import { type BookTreeNode } from '../services/mediaService';
 
 export const Home: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Lightbox Modal state
@@ -104,10 +104,11 @@ export const Home: React.FC = () => {
         <h3 className='text-lg font-semibold'>Folder view</h3>
         <FolderExplorer
           isAdmin={isAdmin}
+          isSuperAdmin={isSuperAdmin}
           onSelectMedia={(item) => setActiveMediaItem(item)}
           onEditMedia={isAdmin ? (item) => setEditingMediaItem(item) : undefined}
           onDeleteMedia={isAdmin ? (item) => setDeletingMediaItem(item) : undefined}
-          onEditBook={isAdmin ? (book) => setEditingBook(book) : undefined}
+          onEditBook={isSuperAdmin ? (book) => setEditingBook(book) : undefined}
           refreshTrigger={refreshTrigger}
         />
       </main>

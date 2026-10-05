@@ -26,6 +26,7 @@ export interface MediaItem {
   image_urls: string[];
   description: string | null;
   book_id: string | null;
+  user_id?: string;
   created_at: string;
   // Joined relation fields for UI rendering
   book?: {
