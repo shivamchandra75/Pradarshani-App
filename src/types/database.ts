@@ -19,6 +19,7 @@ export interface Book {
 export interface Tag {
   id: string;
   name: string;
+  user_id?: string;
 }
 
 export interface MediaItem {
