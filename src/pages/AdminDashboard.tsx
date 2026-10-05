@@ -20,7 +20,7 @@ import {
 import { Header } from '../components/Header';
 
 export const AdminDashboard: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin } = useAuth();
 
   // Form states
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -362,7 +362,7 @@ export const AdminDashboard: React.FC = () => {
                 options={religionOptions}
                 selectedValue={selectedReligionId}
                 onChange={setSelectedReligionId}
-                onAddNew={handleAddNewReligion}
+                onAddNew={isSuperAdmin ? handleAddNewReligion : undefined}
                 placeholder="Select Religion"
               />
 
@@ -372,7 +372,7 @@ export const AdminDashboard: React.FC = () => {
                 options={categoryOptions}
                 selectedValue={selectedCategoryId}
                 onChange={setSelectedCategoryId}
-                onAddNew={handleAddNewCategory}
+                onAddNew={isSuperAdmin ? handleAddNewCategory : undefined}
                 placeholder={selectedReligionId ? 'Select Category' : 'Select Religion first'}
                 disabled={!selectedReligionId}
               />
@@ -381,7 +381,7 @@ export const AdminDashboard: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-gray-800">Book Name</label>
-                  {selectedCategoryId && (
+                  {isSuperAdmin && selectedCategoryId && (
                     <button
                       type="button"
                       onClick={() => setShowAddBookModal(true)}

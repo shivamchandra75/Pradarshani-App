@@ -5,6 +5,8 @@ import { supabase } from '../supabase';
 interface AuthContextType {
   currentUser: User | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
+  userRole: string | null;
   loading: boolean;
   logout: () => Promise<void>;
 }
@@ -12,6 +14,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   currentUser: null,
   isAdmin: false,
+  isSuperAdmin: false,
+  userRole: null,
   loading: true,
   logout: async () => { },
 });
@@ -21,6 +25,8 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -35,6 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           checkAdminStatus(user.id);
         } else {
           setIsAdmin(false);
+          setIsSuperAdmin(false);
+          setUserRole(null);
           setLoading(false);
         }
       }
@@ -48,14 +56,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', userId)
           .maybeSingle();
         
-        if (data && data.role === 'admin') {
-          if (mounted) setIsAdmin(true);
-        } else {
-          if (mounted) setIsAdmin(false);
+        if (mounted) {
+          const role = data?.role || null;
+          setUserRole(role);
+          setIsAdmin(role === 'admin' || role === 'super_admin');
+          setIsSuperAdmin(role === 'super_admin');
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
-        if (mounted) setIsAdmin(false);
+        if (mounted) {
+          setIsAdmin(false);
+          setIsSuperAdmin(false);
+          setUserRole(null);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -71,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           checkAdminStatus(user.id);
         } else {
           setIsAdmin(false);
+          setIsSuperAdmin(false);
+          setUserRole(null);
           setLoading(false);
         }
       }
@@ -87,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, isAdmin, loading, logout }}>
+    <AuthContext.Provider value={{ currentUser, isAdmin, isSuperAdmin, userRole, loading, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

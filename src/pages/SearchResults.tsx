@@ -13,7 +13,7 @@ import { Header } from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 
 export const SearchResults: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { currentUser, isAdmin, isSuperAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialQuery = searchParams.get('q') || '';
@@ -232,8 +232,16 @@ export const SearchResults: React.FC = () => {
                         key={item.id}
                         item={item}
                         onClick={() => setActiveMediaItem(item)}
-                        onEdit={isAdmin ? () => setEditingMediaItem(item) : undefined}
-                        onDelete={isAdmin ? () => setDeletingMediaItem(item) : undefined}
+                        onEdit={
+                          (isSuperAdmin || (isAdmin && item.user_id === currentUser?.id))
+                            ? () => setEditingMediaItem(item)
+                            : undefined
+                        }
+                        onDelete={
+                          (isSuperAdmin || (isAdmin && item.user_id === currentUser?.id))
+                            ? () => setDeletingMediaItem(item)
+                            : undefined
+                        }
                       />
                     ))}
                   </div>

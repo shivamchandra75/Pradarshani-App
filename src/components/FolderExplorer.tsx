@@ -13,6 +13,7 @@ import { ResultItemCard } from './ResultItemCard';
 
 interface FolderExplorerProps {
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   onSelectMedia: (item: MediaItem) => void;
   onEditMedia?: (item: MediaItem) => void;
   onDeleteMedia?: (item: MediaItem) => void;
@@ -26,14 +27,18 @@ interface BreadcrumbStep {
   name: string;
 }
 
+import { useAuth } from '../context/AuthContext';
+
 export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   isAdmin,
+  isSuperAdmin,
   onSelectMedia,
   onEditMedia,
   onDeleteMedia,
   onEditBook,
   refreshTrigger = 0,
 }) => {
+  const { currentUser } = useAuth();
   const [tree, setTree] = useState<ReligionTreeNode[]>([]);
   const [loadingTree, setLoadingTree] = useState(true);
 
@@ -178,7 +183,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           isBook: true,
           coverImageUrl: b.cover_image_url,
           onClick: () => openBook(b),
-          onEdit: isAdmin && onEditBook ? (e) => { e.stopPropagation(); onEditBook(b); } : undefined,
+          onEdit: isSuperAdmin && onEditBook ? (e) => { e.stopPropagation(); onEditBook(b); } : undefined,
         })),
         `${items.length} ${items.length === 1 ? 'Book' : 'Books'}`,
         items.length === 0 ? `No books under ${selectedCategory.name}.` : undefined,
@@ -253,8 +258,16 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
                 key={item.id}
                 item={item}
                 onClick={() => onSelectMedia(item)}
-                onEdit={isAdmin && onEditMedia ? () => onEditMedia(item) : undefined}
-                onDelete={isAdmin && onDeleteMedia ? () => onDeleteMedia(item) : undefined}
+                onEdit={
+                  (isSuperAdmin || (isAdmin && item.user_id === currentUser?.id)) && onEditMedia
+                    ? () => onEditMedia(item)
+                    : undefined
+                }
+                onDelete={
+                  (isSuperAdmin || (isAdmin && item.user_id === currentUser?.id)) && onDeleteMedia
+                    ? () => onDeleteMedia(item)
+                    : undefined
+                }
               />
             ))}
           </div>

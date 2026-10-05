@@ -19,6 +19,7 @@ export interface Book {
 export interface Tag {
   id: string;
   name: string;
+  user_id?: string;
 }
 
 export interface MediaItem {
@@ -26,6 +27,7 @@ export interface MediaItem {
   image_urls: string[];
   description: string | null;
   book_id: string | null;
+  user_id?: string;
   created_at: string;
   // Joined relation fields for UI rendering
   book?: {
