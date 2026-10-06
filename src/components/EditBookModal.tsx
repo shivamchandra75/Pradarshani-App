@@ -71,7 +71,7 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onS
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div className="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col">
+      <div className="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col select-none">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
           <div>
@@ -138,10 +138,10 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onS
                 )}
                 
                 <div className="flex-1 space-y-2 text-center sm:text-left">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 select-none">
                     Select a new file from your device to replace this cover:
                   </p>
-                  <label className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer shadow-sm transition-all">
+                  <label className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer shadow-sm transition-all select-none">
                     <Upload className="w-4 h-4 text-indigo-600" />
                     <span>{replacementFile ? 'Change File' : 'Upload New Cover'}</span>
                     <input
