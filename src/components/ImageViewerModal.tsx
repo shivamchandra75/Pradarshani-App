@@ -198,7 +198,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             {bookName || 'Proof Image'}
           </h2>
           {categoryReligion && (
-            <p className="text-xs text-indigo-300 font-medium truncate">{categoryReligion}</p>
+            <p className="text-xs text-blue-300 font-medium truncate">{categoryReligion}</p>
           )}
           {totalImages > 1 && (
             <p className="text-xs text-white/70 font-mono mt-0.5">
@@ -223,7 +223,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             href={currentUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center space-x-1 px-3.5 py-1.5 bg-indigo-600/90 hover:bg-indigo-600 backdrop-blur-md rounded-full text-xs font-semibold text-white transition-colors shadow-sm"
+            className="flex items-center space-x-1 px-3.5 py-1.5 bg-blue-600/90 hover:bg-blue-600 backdrop-blur-md rounded-full text-xs font-semibold text-white transition-colors shadow-sm"
             title="Open original image in new tab"
           >
             <span>Open</span>

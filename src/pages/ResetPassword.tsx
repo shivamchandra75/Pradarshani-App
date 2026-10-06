@@ -1,58 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
-const Register: React.FC = () => {
+const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [emailError, setEmailError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const validateEmail = (val: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!val) {
-      setEmailError('Email is required');
-      return false;
-    }
-    if (!emailRegex.test(val)) {
-      setEmailError('Please enter a valid email address');
-      return false;
-    }
-    setEmailError('');
-    return true;
-  };
+  useEffect(() => {
+    // Check if the user has an active session
+    // The link from the email will implicitly log them in and create a session.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        // If there's no session, the link is invalid or expired
+        setError('Your password reset link is invalid or has expired. Please request a new one.');
+      }
+    });
 
-  const handleRegister = async (e: React.FormEvent) => {
+    // Also listen for auth state changes just in case the initial fetch missed it
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User is here from a recovery link
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) return;
     if (password !== confirmPassword) {
       return setError('Passwords do not match');
     }
 
     setError('');
     setLoading(true);
+    
     try {
-      // Create user in Supabase Authentication
-      // (The PostgreSQL trigger 'on_auth_user_created' automatically creates the user row in public.users)
-      const { error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
       });
-
-      if (authError) throw authError;
-
-      // Navigate to home
+      
+      if (updateError) throw updateError;
+      
+      toast.success('Password successfully updated!');
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Failed to create an account');
+      setError(err.message || 'Failed to update password');
     }
     setLoading(false);
   };
@@ -61,36 +65,25 @@ const Register: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight">
-            Create New Account
+          <h2 className="mt-6 text-4xl font-extrabold tracking-tight">
+            Praman Hai
           </h2>
+          <p className="mt-2 text-sm text-gray-500 font-medium">
+            Enter your new password below
+          </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+        <form className="mt-8 space-y-6" onSubmit={handleUpdatePassword}>
           {error && (
             <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-xl border border-red-100 font-medium">
               {error}
             </div>
           )}
+          
           <div className="space-y-4">
-            <Input
-              type="email"
-              required
-              placeholder="Email address"
-              className='py-4'
-              value={email}
-              error={emailError}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (emailError) validateEmail(e.target.value);
-              }}
-              onBlur={(e) => validateEmail(e.target.value)}
-              leftIcon={<Mail className="w-5 h-5" />}
-            />
             <Input
               type={showPassword ? 'text' : 'password'}
               required
-              placeholder="Password"
-              className='py-4'
+              placeholder="New Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               leftIcon={<Lock className="w-5 h-5" />}
@@ -108,8 +101,7 @@ const Register: React.FC = () => {
             <Input
               type={showConfirmPassword ? 'text' : 'password'}
               required
-              placeholder="Confirm Password"
-              className='py-4'
+              placeholder="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               leftIcon={<Lock className="w-5 h-5" />}
@@ -129,18 +121,12 @@ const Register: React.FC = () => {
           <div className="pt-2">
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!error.includes('expired')}
+              isLoading={loading}
               className="w-full text-base py-3 shadow-md"
             >
-              {loading ? 'Registering...' : 'Sign Up'}
+              Update Password
             </Button>
-          </div>
-
-          <div className="text-sm text-center text-gray-600 font-medium">
-            Already have an account?{' '}
-            <Link to="/login" className="font-bold text-blue-600 hover:text-blue-500 transition-colors">
-              Log in here
-            </Link>
           </div>
         </form>
       </div>
@@ -148,4 +134,4 @@ const Register: React.FC = () => {
   );
 };
 
-export default Register;
+export default ResetPassword;

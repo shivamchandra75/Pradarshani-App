@@ -76,7 +76,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between border rounded-lg px-3 py-2.5 bg-white text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
+        className={`w-full flex items-center justify-between border rounded-lg px-3 py-2.5 bg-white text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
           disabled ? 'bg-gray-100 cursor-not-allowed opacity-60 border-gray-200' : 'border-gray-300 hover:border-gray-400'
         }`}
       >
@@ -89,8 +89,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 className="w-7 h-9 object-cover rounded shadow-sm border border-gray-200 shrink-0"
               />
             ) : (
-              <div className="w-7 h-9 bg-indigo-50 rounded border border-indigo-100 flex items-center justify-center shrink-0">
-                <BookOpen className="w-4 h-4 text-indigo-500" />
+              <div className="w-7 h-9 bg-blue-50 rounded border border-blue-100 flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4 text-blue-500" />
               </div>
             )}
             <span className="text-gray-900 font-medium truncate">{selectedOption.name}</span>
@@ -129,8 +129,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                     setIsOpen(false);
                     setSearchQuery('');
                   }}
-                  className={`w-full text-left px-3 py-2.5 flex items-center space-x-3 hover:bg-indigo-50 transition-colors ${
-                    opt.id === selectedValue ? 'bg-indigo-50/60 font-semibold' : ''
+                  className={`w-full text-left px-3 py-2.5 flex items-center space-x-3 hover:bg-blue-50 transition-colors ${
+                    opt.id === selectedValue ? 'bg-blue-50/60 font-semibold' : ''
                   }`}
                 >
                   {opt.image_url ? (
@@ -157,7 +157,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 type="button"
                 disabled={isAdding}
                 onClick={handleAddNew}
-                className="w-full text-left px-3 py-2.5 flex items-center space-x-2 text-indigo-600 font-medium hover:bg-indigo-50 transition-colors border-t border-gray-100"
+                className="w-full text-left px-3 py-2.5 flex items-center space-x-2 text-blue-600 font-medium hover:bg-blue-50 transition-colors border-t border-gray-100"
               >
                 <Plus className="w-4 h-4" />
                 <span className="text-sm">

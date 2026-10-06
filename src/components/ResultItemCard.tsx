@@ -21,7 +21,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
   return (
     <div
       onClick={onClick}
-      className="flex w-full bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden cursor-pointer transition-all duration-200 group hover:border-indigo-200 relative"
+      className="flex w-full bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100 overflow-hidden cursor-pointer transition-all duration-200 group hover:border-blue-200 relative"
     >
       {/* Column 1 (30% Horizontal Space) - Book Cover Image */}
       <div className="w-[30%] bg-gray-50 flex items-center justify-center border-r border-gray-100 relative min-h-[120px]">
@@ -32,7 +32,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center p-3 text-indigo-300 group-hover:text-indigo-500 transition-colors">
+          <div className="flex flex-col items-center justify-center p-3 text-blue-300 group-hover:text-blue-500 transition-colors">
             <BookOpen className="w-10 h-10 mb-1" />
             <span className="text-[10px] text-gray-400 text-center font-medium">No Cover</span>
           </div>
@@ -51,13 +51,13 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
       <div className="w-[70%] p-4 flex flex-col justify-between">
         <div>
           {/* Row 1: Book Name */}
-          <h3 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+          <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
             {bookName}
           </h3>
 
           {/* Row 2: religion_name / book_category_name */}
           {categoryReligionString && (
-            <p className="text-xs font-semibold text-indigo-600 mt-0.5 line-clamp-1">
+            <p className="text-xs font-semibold text-blue-600 mt-0.5 line-clamp-1">
               {categoryReligionString}
             </p>
           )}
@@ -82,7 +82,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
                   e.stopPropagation();
                   onEdit();
                 }}
-                className="flex items-center space-x-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg border border-indigo-200 transition-colors"
+                className="flex items-center space-x-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 transition-colors"
                 title="Edit item properties"
               >
                 <Edit3 className="w-3.5 h-3.5" />

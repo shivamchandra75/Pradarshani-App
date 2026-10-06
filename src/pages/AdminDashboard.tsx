@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import {  Upload, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SearchableSelect, type SelectOption } from '../components/SearchableSelect';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 import type { Religion, BookCategory, Book, Tag } from '../types/database';
 import { compressImageIfNeeded } from '../utils/imageCompression';
 import {
@@ -321,9 +323,9 @@ export const AdminDashboard: React.FC = () => {
 
               {/* Upload Area */}
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-indigo-50/50 hover:border-indigo-400 transition-all overflow-hidden relative">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-blue-50/50 hover:border-blue-400 transition-all overflow-hidden relative">
                   <div className="flex flex-col items-center justify-center py-4">
-                    <Upload className="w-8 h-8 text-indigo-400 mb-2" />
+                    <Upload className="w-8 h-8 text-blue-400 mb-2" />
                     <p className="text-sm text-gray-700 font-medium">
                       {selectedFiles.length > 0 ? `Add more images (${selectedFiles.length} selected)` : 'Click to select images'}
                     </p>
@@ -347,7 +349,7 @@ export const AdminDashboard: React.FC = () => {
               </label>
               <textarea
                 rows={3}
-                className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter context, details, or notes about this proof image..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -385,7 +387,7 @@ export const AdminDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowAddBookModal(true)}
-                      className="text-xs text-indigo-600 font-semibold hover:underline flex items-center space-x-0.5"
+                      className="text-xs text-blue-600 font-semibold hover:underline flex items-center space-x-0.5"
                     >
                       <Plus className="w-3 h-3" />
                       <span>New Book</span>
@@ -417,13 +419,13 @@ export const AdminDashboard: React.FC = () => {
                   return (
                     <span
                       key={tag.id}
-                      className="inline-flex items-center space-x-1 px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full"
+                      className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full"
                     >
                       <span>{tag.name}</span>
                       <button
                         type="button"
                         onClick={() => toggleTagSelection(tag.id)}
-                        className="hover:text-indigo-950 ml-1"
+                        className="hover:text-blue-950 ml-1"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -433,24 +435,24 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Tag Search & Add Bar */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Filter or type new tag (e.g. durga pati)..."
-                  value={tagSearchInput}
-                  onChange={(e) => setTagSearchInput(e.target.value)}
-                />
+              <div className="flex items-start gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Filter or type new tag (e.g. durga pati)..."
+                    value={tagSearchInput}
+                    onChange={(e) => setTagSearchInput(e.target.value)}
+                  />
+                </div>
                 {tagSearchInput.trim() &&
                   !allTags.some((t) => t.name.toLowerCase() === tagSearchInput.toLowerCase().trim()) && (
-                    <button
+                    <Button
                       type="button"
                       onClick={handleAddNewTag}
-                      className="px-4 py-2 min-w-fit bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors flex items-center space-x-1"
+                      className="min-w-fit"
+                      icon={<Plus className="w-4 h-4" />}
                     >
-                      <Plus className="w-4 h-4" />
-                      <span>Add Tag</span>
-                    </button>
+                      Add Tag
+                    </Button>
                   )}
               </div>
 
@@ -466,7 +468,7 @@ export const AdminDashboard: React.FC = () => {
                         onClick={() => toggleTagSelection(tag.id)}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                           isSelected
-                            ? 'bg-indigo-600 text-white shadow-sm'
+                            ? 'bg-blue-600 text-white shadow-sm'
                             : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
@@ -482,13 +484,14 @@ export const AdminDashboard: React.FC = () => {
 
             {/* Submit Button */}
             <div className="pt-4">
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center py-3 px-6 border border-transparent rounded-xl text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 shadow-md transition-all"
+                isLoading={loading}
+                className="w-full text-base py-3"
               >
-                {loading ? 'Uploading & Saving...' : 'Upload Media Proof'}
-              </button>
+                Upload Media Proof
+              </Button>
             </div>
           </form>
         </div>
@@ -506,47 +509,54 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <form onSubmit={handleCreateNewBook} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Book Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g. Rigved, Yajurved, Gita..."
-                  value={newBookName}
-                  onChange={(e) => setNewBookName(e.target.value)}
-                />
-              </div>
+              <Input
+                label="Book Name *"
+                required
+                placeholder="e.g. Rigved, Yajurved, Gita..."
+                value={newBookName}
+                onChange={(e) => setNewBookName(e.target.value)}
+              />
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                <label className="block text-sm font-semibold text-gray-800 mb-1.5">
                   Book Cover Image (Thumbnail)
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setNewBookCoverFile(e.target.files?.[0] || null)}
-                  className="block w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                />
+                <div>
+                  <input
+                    type="file"
+                    id="admin-new-book-cover"
+                    accept="image/*"
+                    onChange={(e) => setNewBookCoverFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                  <label htmlFor="admin-new-book-cover" className="cursor-pointer">
+                    <Button as="span" variant="secondary" icon={<Upload className="w-4 h-4 text-blue-600" />}>
+                      {newBookCoverFile ? 'Change File' : 'Upload Cover Image'}
+                    </Button>
+                  </label>
+                  {newBookCoverFile && (
+                    <p className="mt-2 text-xs text-blue-600 font-medium truncate">
+                      {newBookCoverFile.name}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setShowAddBookModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow"
+                  isLoading={loading}
                 >
-                  {loading ? 'Saving...' : 'Create Book'}
-                </button>
+                  Create Book
+                </Button>
               </div>
             </form>
           </div>

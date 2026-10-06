@@ -11,6 +11,7 @@ import { EditMediaModal } from '../components/EditMediaModal';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Header } from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+import { Input } from '../components/Input';
 
 export const SearchResults: React.FC = () => {
   const { currentUser, isAdmin, isSuperAdmin } = useAuth();
@@ -135,27 +136,26 @@ export const SearchResults: React.FC = () => {
       {/* Search Header Content */}
       <div className="bg-white py-4 px-4 border-b border-gray-100">
         <div className="max-w-4xl mx-auto">
-          <div className="flex-1 flex items-center bg-white border border-gray-300 rounded-full px-4 py-3 transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 h-12">
-            <Search className="h-5 w-5 text-gray-400 shrink-0 mr-3" />
-            <input
-              type="text"
-              className="w-full bg-transparent border-none text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0"
-              placeholder="Search context (e.g. 'durga ke pati', 'durga ka pati')..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              autoFocus
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 shrink-0 ml-2 transition-colors"
-                title="Clear search"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
+          <Input
+            leftIcon={<Search className="h-5 w-5" />}
+            rightIcon={
+              searchTerm ? (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                  title="Clear search"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              ) : null
+            }
+            placeholder="Search context (e.g. 'durga ke pati', 'durga ka pati')..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            autoFocus
+            className="h-12 !rounded-full text-base"
+          />
         </div>
       </div>
 
@@ -163,7 +163,7 @@ export const SearchResults: React.FC = () => {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {loadingTags ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+            <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
           </div>
         ) : !searchTerm.trim() ? (
           <div className="text-center py-20 text-gray-400 text-base">
@@ -175,7 +175,7 @@ export const SearchResults: React.FC = () => {
             {!hideSuggestions && matchingTags.length > 0 && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-fade-in">
                 <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center space-x-1.5">
-                  <TagIcon className="w-4 h-4 text-indigo-500" />
+                  <TagIcon className="w-4 h-4 text-blue-500" />
                   <span>Select a matching tag below:</span>
                 </h2>
 
@@ -188,8 +188,8 @@ export const SearchResults: React.FC = () => {
                         onClick={() => handleSelectTag(tag)}
                         className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm flex items-center space-x-1.5 ${
                           isSelected
-                            ? 'bg-indigo-600 text-white ring-2 ring-indigo-600 ring-offset-2 scale-105'
-                            : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 border border-indigo-100'
+                            ? 'bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2 scale-105'
+                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-900 border border-blue-100'
                         }`}
                       >
                         <span>{tag.name}</span>
@@ -219,7 +219,7 @@ export const SearchResults: React.FC = () => {
 
                 {loadingMedia ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
                   </div>
                 ) : mediaResults.length === 0 ? (
                   <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center text-gray-500">
