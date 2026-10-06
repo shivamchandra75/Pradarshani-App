@@ -114,6 +114,11 @@ const AdminLogin: React.FC = () => {
                 </button>
               }
             />
+            <div className="flex justify-end pt-1">
+              <Link to="/forgot-password" state={{ email }} className="text-sm font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <div className="pt-2">
