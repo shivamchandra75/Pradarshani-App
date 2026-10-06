@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Upload, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { X, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { updateBook, uploadImageFile, type BookTreeNode } from '../services/mediaService';
 import { compressImageIfNeeded } from '../utils/imageCompression';
-
+import { Input } from './Input';
+import { Button } from './Button';
 interface EditBookModalProps {
   book: BookTreeNode;
   onClose: () => void;
@@ -107,18 +108,12 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onS
           )}
 
           <form id="edit-book-form" onSubmit={handleSave} className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Book Name *
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={bookName}
-                onChange={(e) => setBookName(e.target.value)}
-              />
-            </div>
+            <Input
+              label="Book Name *"
+              required
+              value={bookName}
+              onChange={(e) => setBookName(e.target.value)}
+            />
 
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -141,18 +136,22 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onS
                   <p className="text-xs text-gray-500 select-none">
                     Select a new file from your device to replace this cover:
                   </p>
-                  <label className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer shadow-sm transition-all select-none">
-                    <Upload className="w-4 h-4 text-indigo-600" />
-                    <span>{replacementFile ? 'Change File' : 'Upload New Cover'}</span>
+                  <div>
                     <input
                       type="file"
+                      id="edit-book-cover"
                       accept="image/*"
                       className="hidden"
                       onChange={handleReplacementFileChange}
                     />
-                  </label>
+                    <label htmlFor="edit-book-cover" className="cursor-pointer">
+                      <Button as="span" variant="secondary" icon={<Upload className="w-4 h-4 text-blue-600" />}>
+                        {replacementFile ? 'Change File' : 'Upload New Cover'}
+                      </Button>
+                    </label>
+                  </div>
                   {replacementFile && (
-                    <p className="text-xs text-indigo-600 font-medium truncate">
+                    <p className="text-xs text-blue-600 font-medium truncate">
                       {replacementFile.name}
                     </p>
                   )}
@@ -164,24 +163,25 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onS
 
         {/* Footer Actions */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-2.5">
-          <button
+          <Button
             type="submit"
             form="edit-book-form"
             disabled={loading}
-            className="w-full flex items-center justify-center space-x-2 py-2.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow transition-all disabled:opacity-50"
+            isLoading={loading}
+            className="w-full"
           >
-            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>Save Changes</span>
-          </button>
+            Save Changes
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
             disabled={loading}
             className="w-full text-center py-2.5 px-6 text-sm font-semibold text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl transition-colors"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -73,7 +73,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       {onEdit && (
         <button
           onClick={onEdit}
-          className="hidden md:flex absolute top-2 right-2 p-1.5 bg-white border border-gray-200 text-gray-500 hover:text-indigo-600 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="hidden md:flex absolute top-2 right-2 p-1.5 bg-white border border-gray-200 text-gray-500 hover:text-blue-600 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
           title="Edit Book"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
