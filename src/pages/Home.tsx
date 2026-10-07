@@ -12,6 +12,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { FolderExplorer } from '../components/FolderExplorer';
 import { Header } from '../components/Header';
 import { type BookTreeNode } from '../services/mediaService';
+import { useHistoryModal } from '../hooks/useHistoryModal';
 
 export const Home: React.FC = () => {
   const { isAdmin, isSuperAdmin } = useAuth();
@@ -29,6 +30,12 @@ export const Home: React.FC = () => {
   // Delete confirmation modal state
   const [deletingMediaItem, setDeletingMediaItem] = useState<MediaItem | null>(null);
 
+  // Sync modals with history API
+  useHistoryModal(!!activeMediaItem, () => setActiveMediaItem(null), 'preview');
+  useHistoryModal(!!editingMediaItem, () => setEditingMediaItem(null), 'editMedia');
+  useHistoryModal(!!editingBook, () => setEditingBook(null), 'editBook');
+  useHistoryModal(!!deletingMediaItem, () => setDeletingMediaItem(null), 'deleteMedia');
+
   // Trigger to refresh children components (like FolderExplorer)
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -39,13 +46,8 @@ export const Home: React.FC = () => {
 
   const handleBookSaved = async () => {
     setEditingBook(null);
-    // Triggering refresh to reload tree or cache
-    // Note: FolderExplorer caches the tree but we can force it by remounting or just letting user refresh, 
-    // but the easiest is to force reload tree via a window.location.reload() for a hard refresh of the sidebar
-    // However, let's try just setting refreshTrigger which might be enough or we could reload.
-    // For now, let's just trigger refreshTrigger and rely on the fact that they can navigate out and back in.
     setRefreshTrigger(prev => prev + 1);
-    window.location.reload(); // Hard refresh to ensure folder tree is updated
+    window.location.reload(); 
   };
 
   // Confirm and execute delete

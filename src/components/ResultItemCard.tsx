@@ -1,6 +1,6 @@
 import React from 'react';
 import type { MediaItem } from '../types/database';
-import { BookOpen, Edit3, Trash2, Images } from 'lucide-react';
+import { BookOpen, Edit2, Trash2, Images } from 'lucide-react';
 
 interface ResultItemCardProps {
   item: MediaItem;
@@ -57,7 +57,7 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
 
           {/* Row 2: religion_name / book_category_name */}
           {categoryReligionString && (
-            <p className="text-xs font-semibold text-blue-600 mt-0.5 line-clamp-1">
+            <p className="text-xs font-medium text-gray-500 mt-0.5 line-clamp-1">
               {categoryReligionString}
             </p>
           )}
@@ -82,11 +82,10 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
                   e.stopPropagation();
                   onEdit();
                 }}
-                className="flex items-center space-x-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 transition-colors"
+                className="flex items-center justify-center px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 transition-colors"
                 title="Edit item properties"
               >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit</span>
+                <Edit2 className="w-3.5 h-3.5" />
               </button>
             )}
 
@@ -97,11 +96,10 @@ export const ResultItemCard: React.FC<ResultItemCardProps> = ({ item, onClick, o
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="flex items-center space-x-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg border border-red-200 transition-colors"
+                className="flex items-center justify-center px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg border border-red-200 transition-colors"
                 title="Delete media item"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete</span>
               </button>
             )}
           </div>

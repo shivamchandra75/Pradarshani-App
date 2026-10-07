@@ -28,6 +28,7 @@ interface BreadcrumbStep {
 }
 
 import { useAuth } from '../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   isAdmin,
@@ -39,12 +40,35 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
   refreshTrigger = 0,
 }) => {
   const { currentUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [tree, setTree] = useState<ReligionTreeNode[]>([]);
   const [loadingTree, setLoadingTree] = useState(true);
 
-  const [path, setPath] = useState<BreadcrumbStep[]>([
-    { type: 'root', id: 'root', name: 'Root' },
-  ]);
+  // Initialize path from URL if present
+  const initialPathString = searchParams.get('fpath');
+  const initialPath = initialPathString ? JSON.parse(initialPathString) : [{ type: 'root', id: 'root', name: 'Root' }];
+  
+  const [path, setPath] = useState<BreadcrumbStep[]>(initialPath);
+
+  // Sync back button changes from URL to local state
+  useEffect(() => {
+    const currentParam = searchParams.get('fpath');
+    if (currentParam) {
+      try {
+        setPath(JSON.parse(currentParam));
+      } catch {}
+    } else {
+      setPath([{ type: 'root', id: 'root', name: 'Root' }]);
+    }
+  }, [searchParams]);
+
+  const updatePath = (newPath: BreadcrumbStep[]) => {
+    setPath(newPath);
+    const next = new URLSearchParams(searchParams);
+    next.set('fpath', JSON.stringify(newPath));
+    setSearchParams(next);
+  };
 
   // Book proof images in-memory cache to avoid duplicate API calls
   const [bookMediaCache, setBookMediaCache] = useState<Record<string, MediaItem[]>>({});
@@ -116,26 +140,26 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
 
   // Navigation handlers
   const navigateToBreadcrumb = (index: number) => {
-    setPath((prev) => prev.slice(0, index + 1));
+    updatePath(path.slice(0, index + 1));
   };
 
   const openReligion = (religion: ReligionTreeNode) => {
-    setPath([
+    updatePath([
       { type: 'root', id: 'root', name: 'Root' },
       { type: 'religion', id: religion.id, name: religion.name },
     ]);
   };
 
   const openCategory = (category: CategoryTreeNode) => {
-    setPath((prev) => [
-      ...prev.slice(0, 2),
+    updatePath([
+      ...path.slice(0, 2),
       { type: 'category', id: category.id, name: category.name },
     ]);
   };
 
   const openBook = (book: BookTreeNode) => {
-    setPath((prev) => [
-      ...prev.slice(0, 3),
+    updatePath([
+      ...path.slice(0, 3),
       { type: 'book', id: book.id, name: book.name },
     ]);
   };
