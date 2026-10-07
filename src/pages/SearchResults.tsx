@@ -88,7 +88,7 @@ export const SearchResults: React.FC = () => {
     setSelectedTag(tag);
     setSearchTerm(tag.name);
     setHideSuggestions(true);
-    setSearchParams({ q: tag.name });
+    setSearchParams({ q: tag.name }, { replace: true });
   };
 
   const handleMediaSaved = async () => {
@@ -131,7 +131,7 @@ export const SearchResults: React.FC = () => {
     setSearchTerm('');
     setSelectedTag(null);
     setHideSuggestions(false);
-    setSearchParams({});
+    setSearchParams({}, { replace: true });
   };
 
   return (
