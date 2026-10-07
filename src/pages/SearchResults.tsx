@@ -12,6 +12,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { Header } from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/Input';
+import { useHistoryModal } from '../hooks/useHistoryModal';
 
 export const SearchResults: React.FC = () => {
   const { currentUser, isAdmin, isSuperAdmin } = useAuth();
@@ -36,6 +37,10 @@ export const SearchResults: React.FC = () => {
 
   // Delete confirmation modal state
   const [deletingMediaItem, setDeletingMediaItem] = useState<MediaItem | null>(null);
+
+  useHistoryModal(!!activeMediaItem, () => setActiveMediaItem(null), 'preview');
+  useHistoryModal(!!editingMediaItem, () => setEditingMediaItem(null), 'editMedia');
+  useHistoryModal(!!deletingMediaItem, () => setDeletingMediaItem(null), 'deleteMedia');
 
   const loadTags = useCallback(async () => {
     try {
@@ -116,7 +121,7 @@ export const SearchResults: React.FC = () => {
     const val = e.target.value;
     setSearchTerm(val);
     setHideSuggestions(false);
-    setSearchParams(val.trim() ? { q: val } : {});
+    setSearchParams(val.trim() ? { q: val } : {}, { replace: true });
     if (!val.trim()) {
       setSelectedTag(null);
     }
