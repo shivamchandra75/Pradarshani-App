@@ -11,12 +11,15 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import './index.css';
 
+import Guest404 from './pages/Guest404';
+
 // Protected Route Wrapper for any logged-in user
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, userRole, loading } = useAuth();
   
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!currentUser) return <Navigate to="/login" />;
+  if (userRole === 'guest') return <Guest404 />;
   
   return <>{children}</>;
 };
