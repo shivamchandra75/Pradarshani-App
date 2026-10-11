@@ -1,10 +1,10 @@
 import imageCompression from 'browser-image-compression';
 
 export const compressImageIfNeeded = async (file: File): Promise<File> => {
-  const maxSizeInMB = 0.2; // 200KB limit for compression
+  const maxSizeInMB = 0.6; // 600KB limit for compression
   
-  // Only apply compression if image size is above 200kb
-  if (file.size / 1024 / 1024 <= maxSizeInMB) {
+  // Only apply compression if image size is above 600kb
+  if (file.size <= 600 * 1024) {
     return file;
   }
 
