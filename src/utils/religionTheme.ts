@@ -29,8 +29,7 @@ const SOURCES: Record<string, { fg: string; icon: string; mode?: IconMode }> = {
   // Off-white would vanish on its own lighter tint, so this is a darker off-white (khaki)
   kabirpanthi: { fg: '#A8996B', icon: '/Kabir%20Panthi.svg', mode: 'original' },
   radhaswami: { fg: '#800000', icon: '/radha%20swami.svg' },
-  // Lighter than Jainism so the two grays stay distinguishable
-  santmat: { fg: '#A7ADB8', icon: '/Sant%20mat.svg' },
+  santmat: { fg: '#EC4899', icon: '/Sant%20mat.svg' },
   sikhism: { fg: '#1E3A8A', icon: '/Sikhism.svg' },
 };
 
