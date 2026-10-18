@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Upload  } from 'lucide-react';
+import { Search, Upload, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -98,6 +98,20 @@ export const Home: React.FC = () => {
             </div>
           </button>
 
+          {isSuperAdmin && (
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="w-full mt-3 group flex items-center p-4 bg-purple-50 hover:bg-purple-100/80 rounded-[28px] transition-all duration-200 border border-purple-100/50 shadow-sm hover:shadow-md"
+            >
+              <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-purple-200/50 group-hover:bg-purple-200 rounded-full mr-4 text-purple-700 transition-colors">
+                <LayoutDashboard className="w-6 h-6" />
+              </div>
+              <div className="text-left flex-1">
+                <h3 className="text-base font-semibold text-purple-800 tracking-tight">Dashboard</h3>
+                <p className="text-sm text-purple-700/80 font-medium">Uploads, users and storage</p>
+              </div>
+            </button>
+          )}
         </div>
       )}
 

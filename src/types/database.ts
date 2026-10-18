@@ -1,3 +1,13 @@
+export type UserRole = 'guest' | 'user' | 'admin' | 'super_admin';
+
+export interface AppUser {
+  id: string;
+  email: string | null;
+  user_name: string | null;
+  role: UserRole;
+  created_at: string;
+}
+
 export interface Religion {
   id: string;
   name: string;

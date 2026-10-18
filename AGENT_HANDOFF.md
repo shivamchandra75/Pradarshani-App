@@ -93,6 +93,7 @@ erDiagram
 Stores user profile information, role-based authorization levels, and user emails.
 * **`id`** (`uuid`, Primary Key): References `auth.users(id)` with `ON DELETE CASCADE`.
 * **`email`** (`text`): User's email address copied automatically on registration.
+* **`user_name`** (`text`, Nullable): Display name (from the Google profile when available). The UI falls back to `email` when empty. Requires `ALTER TABLE public.users ADD COLUMN user_name text;` (used by the super-admin dashboard).
 * **`role`** (`text`, Default: `'guest'`): Allowed values: `'guest'`, `'user'`, `'admin'`, `'super_admin'`.
 * **`created_at`** (`timestamptz`, Default: `now()`).
 
@@ -185,6 +186,10 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 ```
+
+### 3.3 Super-admin dashboard support (`/admin/dashboard`)
+* **`get_media_storage_bytes()`** — `SECURITY DEFINER` RPC returning total bytes in the `media-uploads` bucket (`sum(storage.objects.metadata->>'size')`). Returns `NULL` unless the caller is `super_admin`; the dashboard shows "Unavailable" for `NULL`. `EXECUTE` is granted to `authenticated` only.
+* **`guard_role_change()` + trigger `users_role_guard`** — `BEFORE UPDATE` on `public.users`: only `super_admin` may change `role`. Needed because the policy "Users can update their own profile" has no column restriction, so without the trigger any user could promote themselves. Calls with no JWT (`auth.uid() IS NULL`: Supabase dashboard / service role) are allowed, so manual promotion still works.
 
 ---
 

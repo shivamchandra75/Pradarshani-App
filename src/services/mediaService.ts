@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { Religion, BookCategory, Book, Tag, MediaItem } from '../types/database';
+import type { Religion, BookCategory, Book, Tag, MediaItem, AppUser, UserRole } from '../types/database';
 
 const BUCKET_NAME = 'media-uploads';
 
@@ -492,5 +492,51 @@ export async function fetchMediaByBookId(bookId: string): Promise<MediaItem[]> {
 
   if (error) throw error;
   return (data as unknown as MediaItem[]) || [];
+}
+
+/**
+ * Super-admin dashboard: all users (RLS lets any authenticated user read `users`)
+ */
+export async function fetchAllUsers(): Promise<AppUser[]> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, email, user_name, role, created_at')
+    .order('created_at');
+  if (error) throw error;
+  return (data as AppUser[]) || [];
+}
+
+/**
+ * Changes a user's role. Only super_admin passes RLS; `.select().single()` makes a silently
+ * filtered (0-row) update surface as an error.
+ */
+export async function updateUserRole(userId: string, role: Exclude<UserRole, 'super_admin'>): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update({ role })
+    .eq('id', userId)
+    .select('id')
+    .single();
+  if (error) throw error;
+}
+
+/**
+ * Owner + timestamp of every media record, for per-user upload stats.
+ * Note: PostgREST returns at most 1000 rows; move to an RPC if media outgrows that.
+ */
+export async function fetchMediaUploadStats(): Promise<{ user_id: string | null; created_at: string }[]> {
+  const { data, error } = await supabase.from('media').select('user_id, created_at');
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Total bytes in the media-uploads bucket via the super_admin-only `get_media_storage_bytes` RPC.
+ * Returns null when the RPC is missing or the caller isn't super_admin.
+ */
+export async function fetchMediaStorageBytes(): Promise<number | null> {
+  const { data, error } = await supabase.rpc('get_media_storage_bytes');
+  if (error || data === null) return null;
+  return Number(data);
 }
 
