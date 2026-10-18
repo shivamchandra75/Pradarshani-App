@@ -10,6 +10,7 @@ import {
 } from '../services/mediaService';
 import { FolderCard } from './FolderCard';
 import { ResultItemCard } from './ResultItemCard';
+import { getReligionTheme, type ReligionTheme } from '../utils/religionTheme';
 
 interface FolderExplorerProps {
   isAdmin: boolean;
@@ -174,6 +175,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           id: r.id,
           name: r.name,
           subtitle: `${r.categories?.length || 0} ${(r.categories?.length || 0) === 1 ? 'category' : 'categories'}`,
+          theme: getReligionTheme(r.name),
+          showThemeIcon: true,
           onClick: () => openReligion(r),
         })),
         `${items.length} ${items.length === 1 ? 'Religion' : 'Religions'}`,
@@ -189,6 +192,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           id: c.id,
           name: c.name,
           subtitle: `${c.books?.length || 0} ${(c.books?.length || 0) === 1 ? 'book' : 'books'}`,
+          theme: getReligionTheme(selectedReligion.name),
           onClick: () => openCategory(c),
         })),
         `${items.length} ${items.length === 1 ? 'Category' : 'Categories'}`,
@@ -206,6 +210,7 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
           subtitle: 'Open →',
           isBook: true,
           coverImageUrl: b.cover_image_url,
+          theme: getReligionTheme(selectedReligion?.name),
           onClick: () => openBook(b),
           onEdit: isSuperAdmin && onEditBook ? (e) => { e.stopPropagation(); onEditBook(b); } : undefined,
         })),
@@ -224,6 +229,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
       subtitle: string;
       isBook?: boolean;
       coverImageUrl?: string | null;
+      theme?: ReligionTheme;
+      showThemeIcon?: boolean;
       onClick: () => void;
       onEdit?: (e: React.MouseEvent) => void;
     }>,
@@ -245,6 +252,8 @@ export const FolderExplorer: React.FC<FolderExplorerProps> = ({
               subtitle={f.subtitle}
               isBook={f.isBook}
               coverImageUrl={f.coverImageUrl}
+              theme={f.theme}
+              showThemeIcon={f.showThemeIcon}
               onClick={f.onClick}
               onEdit={f.onEdit}
             />
