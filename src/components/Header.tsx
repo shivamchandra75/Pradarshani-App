@@ -23,6 +23,7 @@ export const Header: React.FC = () => {
 
   const getRouteHeaderText = () => {
     if (location.pathname.startsWith('/admin/uploads')) return "Upload Images";
+    if (location.pathname.startsWith('/admin/dashboard')) return "Dashboard";
     return 'Praman';
   };
 

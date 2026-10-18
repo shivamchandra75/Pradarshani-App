@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import SearchResults from './pages/SearchResults';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -31,6 +32,16 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!isAdmin) return <Navigate to="/login" />;
   
+  return <>{children}</>;
+};
+
+// Protected Route Wrapper for Super Admins
+const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isSuperAdmin, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!isSuperAdmin) return <Navigate to="/login" />;
+
   return <>{children}</>;
 };
 
@@ -78,6 +89,14 @@ function App() {
                 <AdminDashboard />
               </AdminRoute>
             } 
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <SuperAdminRoute>
+                <SuperAdminDashboard />
+              </SuperAdminRoute>
+            }
           />
         </Routes>
       </Router>
