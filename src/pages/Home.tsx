@@ -87,14 +87,14 @@ export const Home: React.FC = () => {
         <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 mb-6">
           <button 
             onClick={() => navigate('/admin/uploads')}
-            className="w-full group flex items-center p-4 bg-orange-50 hover:bg-orange-100/80 rounded-[28px] transition-all duration-200 border border-orange-100/50 shadow-sm hover:shadow-md"
+            className="w-full group flex items-center p-4 bg-blue-50 hover:bg-blue-100/80 rounded-[28px] transition-all duration-200 border border-blue-100/50 shadow-sm hover:shadow-md"
           >
-            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-orange-200/50 group-hover:bg-orange-200 rounded-full mr-4 text-orange-700 transition-colors">
+            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 bg-blue-200/50 group-hover:bg-blue-200 rounded-full mr-4 text-blue-700 transition-colors">
               <Upload className="w-6 h-6" />
             </div>
             <div className="text-left flex-1">
-              <h3 className="text-base font-semibold text-orange-800 tracking-tight">Upload Images</h3>
-              <p className="text-sm text-orange-700/80 font-medium">Add new proofs / praman </p>
+              <h3 className="text-base font-semibold text-blue-800 tracking-tight">Upload Images</h3>
+              <p className="text-sm text-blue-700/80 font-medium">Add new proofs / praman </p>
             </div>
           </button>
 

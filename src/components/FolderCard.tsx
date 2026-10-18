@@ -1,6 +1,7 @@
 import React from 'react';
 import { Folder, BookOpen } from 'lucide-react';
 import { useLongPress } from '../hooks/useLongPress';
+import type { ReligionTheme } from '../utils/religionTheme';
 
 interface FolderCardProps {
   name: string;
@@ -8,9 +9,42 @@ interface FolderCardProps {
   coverImageUrl?: string | null;
   /** If true, renders a book cover thumbnail instead of a folder icon */
   isBook?: boolean;
+  /** Religion colors; when set, the card uses them instead of the default blue */
+  theme?: ReligionTheme;
+  /** Replaces the folder glyph with the religion's icon (root level only) */
+  showThemeIcon?: boolean;
   onClick: () => void;
   onEdit?: (e: React.MouseEvent) => void;
 }
+
+const maskStyle = (url: string, mode: 'alpha' | 'luminance'): React.CSSProperties => ({
+  WebkitMaskImage: `url("${url}")`,
+  maskImage: `url("${url}")`,
+  WebkitMaskSize: 'contain',
+  maskSize: 'contain',
+  WebkitMaskRepeat: 'no-repeat',
+  maskRepeat: 'no-repeat',
+  WebkitMaskPosition: 'center',
+  maskPosition: 'center',
+  maskMode: mode,
+});
+
+/** Paints the religion's SVG in the theme color. The SVGs wrap transparent rasters, so they are recolored with a CSS mask rather than `fill`. */
+const ThemedIcon: React.FC<{ theme: ReligionTheme }> = ({ theme }) => (
+  <div className="relative w-12 h-12 sm:w-14 sm:h-14 group-hover:scale-105 transition-transform duration-200">
+    {theme.mode === 'original' ? (
+      <img src={theme.icon} alt="" className="w-full h-full object-contain" />
+    ) : (
+      <>
+        <div className="absolute inset-0" style={{ backgroundColor: theme.fg, ...maskStyle(theme.icon, 'alpha') }} />
+        {theme.mode === 'cutout' && (
+          // Luminance mask keeps only the icon's white parts, repainted in the card color
+          <div className="absolute inset-0" style={{ backgroundColor: theme.bg, ...maskStyle(theme.icon, 'luminance') }} />
+        )}
+      </>
+    )}
+  </div>
+);
 
 /**
  * Reusable iOS Finder-style folder card used at every level of the folder tree.
@@ -21,6 +55,8 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   subtitle,
   coverImageUrl,
   isBook = false,
+  theme,
+  showThemeIcon = false,
   onClick,
   onEdit,
 }) => {
@@ -38,10 +74,21 @@ export const FolderCard: React.FC<FolderCardProps> = ({
         type="button"
         onClick={onClick}
         {...longPressProps}
-        className={`w-full h-full flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-blue-50/40 hover:bg-blue-50 border border-blue-50/40 hover:border-blue-100 transition-all duration-200 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-xs select-none ${
-          longPressProps.isHolding && window.innerWidth < 768 && isBook ? 'scale-95 bg-blue-100' : 'scale-100'
+        className={`w-full h-full flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border transition-all duration-200 text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-xs select-none ${
+          theme
+            ? 'hover:brightness-95'
+            : 'bg-blue-50/40 hover:bg-blue-50 border-blue-50/40 hover:border-blue-100'
+        } ${
+          longPressProps.isHolding && window.innerWidth < 768 && isBook
+            ? `scale-95 ${theme ? 'brightness-90' : 'bg-blue-100'}`
+            : 'scale-100'
         }`}
-        style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+        style={{
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          ...(theme && { backgroundColor: theme.bg, borderColor: theme.border }),
+        }}
       >
       {isBook ? (
         /* Book Cover Thumbnail */
@@ -59,13 +106,30 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       ) : (
         /* Folder Icon */
         <div className="relative mb-2 pointer-events-none">
-          <Folder className="w-12 h-12 sm:w-14 sm:h-14 text-blue-500 fill-blue-500 group-hover:scale-105 transition-transform duration-200" />
+          {theme && showThemeIcon ? (
+            <ThemedIcon theme={theme} />
+          ) : (
+            <Folder
+              className={`w-12 h-12 sm:w-14 sm:h-14 fill-current group-hover:scale-105 transition-transform duration-200 ${
+                theme ? '' : 'text-blue-500'
+              }`}
+              style={theme ? { color: theme.fg } : undefined}
+            />
+          )}
         </div>
       )}
-      <span className="text-xs sm:text-sm font-bold text-gray-800 group-hover:text-blue-600 line-clamp-1 pointer-events-none">
+      <span
+        className={`text-xs sm:text-sm font-bold line-clamp-1 pointer-events-none ${
+          theme ? '' : 'text-gray-800 group-hover:text-blue-600'
+        }`}
+        style={theme ? { color: theme.text } : undefined}
+      >
         {name}
       </span>
-      <span className="text-[10px] sm:text-xs text-gray-400 font-medium mt-0.5 pointer-events-none">
+      <span
+        className={`text-[10px] sm:text-xs font-medium mt-0.5 pointer-events-none ${theme ? '' : 'text-gray-400'}`}
+        style={theme ? { color: theme.text, opacity: 0.75 } : undefined}
+      >
         {subtitle}
       </span>
       </button>
