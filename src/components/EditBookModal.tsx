@@ -47,7 +47,7 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, onClose, onS
       let finalImageUrl = book.cover_image_url;
       
       if (replacementFile) {
-        const compressedFile = await compressImageIfNeeded(replacementFile);
+        const compressedFile = await compressImageIfNeeded(replacementFile, 'cover');
         finalImageUrl = await uploadImageFile(compressedFile, 'covers');
       }
 
