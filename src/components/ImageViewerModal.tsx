@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ArrowLeft, ExternalLink, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageViewerModalProps {
@@ -31,6 +31,17 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 
   // Last tap time for double-tap detection
   const lastTapRef = useRef<number>(0);
+
+  // Description: clamped to 5 lines, toggle shown only when the text overflows
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
+  const descRef = useRef<HTMLParagraphElement>(null);
+
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    // Only measure while clamped; once expanded, keep the toggle so "Show less" stays reachable
+    if (el && !descExpanded) setDescOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [description, descExpanded]);
 
   const totalImages = imageUrls.length;
   const currentUrl = imageUrls[currentIndex];
@@ -297,27 +308,53 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         <div className="max-w-3xl mx-auto px-6 py-4 space-y-3">
           {/* Dot Indicators for Multi-Image */}
           {totalImages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
+            <div className="flex justify-center items-center">
               {imageUrls.map((_, idx) => (
+                // Padded button gives a ~28px tap target around the small dot
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => { setCurrentIndex(idx); resetZoomState(); }}
-                  className={`rounded-full transition-all ${
-                    idx === currentIndex
-                      ? 'w-2.5 h-2.5 bg-white scale-110'
-                      : 'w-2 h-2 bg-white/40 hover:bg-white/60'
-                  }`}
-                />
+                  aria-label={`Image ${idx + 1} of ${totalImages}`}
+                  aria-current={idx === currentIndex}
+                  className="p-2 group"
+                >
+                  {/* Dark border keeps the white dot visible over light images */}
+                  <span
+                    className={`block rounded-full border border-black/70 transition-all shadow-[0_0_0_1px_rgba(255,255,255,0.25)] ${
+                      idx === currentIndex
+                        ? 'w-3 h-3 bg-white'
+                        : 'w-2.5 h-2.5 bg-white/50 group-hover:bg-white/80'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           )}
 
-          {/* Description */}
+          {/* Description: 5 lines, expandable. Expanded text scrolls within 35vh so it never reaches the side arrows. */}
           {description && (
             <div className="bg-black/50 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-lg">
-              <p className="text-sm sm:text-base text-gray-100 leading-relaxed font-normal">
-                {description}
-              </p>
+              <div className={descExpanded ? 'max-h-[35vh] overflow-y-auto overscroll-contain' : ''}>
+                <p
+                  ref={descRef}
+                  className={`text-sm sm:text-base text-gray-100 leading-relaxed font-normal ${
+                    descExpanded ? '' : 'line-clamp-5'
+                  }`}
+                >
+                  {description}
+                </p>
+              </div>
+              {(descOverflows || descExpanded) && (
+                <button
+                  type="button"
+                  onClick={() => setDescExpanded((prev) => !prev)}
+                  aria-expanded={descExpanded}
+                  className="mt-1 -mb-2 py-2 text-sm font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+                >
+                  {descExpanded ? 'Show less' : 'Read more'}
+                </button>
+              )}
             </div>
           )}
         </div>
