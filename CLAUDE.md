@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Gotchas
 - `verbatimModuleSyntax` is on: import types with `import type { ... }` or the build fails.
 - Deleting a media row cascades in SQL but does NOT delete Storage files. Always use `deleteMediaRecord()` / `deleteImageFromStorage()`; they also call `cleanupOrphanTags()`. Tags are stored lowercase; orphaned tags are purged.
-- Images go to the public `media-uploads` bucket (`proofs/`, `book-covers/`). `compressImageIfNeeded` only compresses files larger than 600 KB (max 1920px).
+- Images go to the public `media-uploads` bucket (`proofs/`, `book-covers/`). `compressImageIfNeeded(file, 'proof' | 'cover')` re-encodes every upload to AVIF q60 (WebP q80 fallback) in a Web Worker via jSquash WASM, capping the long edge at 2560px (proofs) / 800px (covers); fixed quality, no size target. Settings came from a benchmark on real proofs; don't reintroduce a `maxSizeMB`-style loop (it shrinks dimensions and quality together).
 - `media.image_urls` is `text[]` (migrated from single `image_url`).
 - `AGENT_HANDOFF.md` has the full schema, RLS SQL, and feature history; read it before touching DB or auth. Preserve the owner's existing edits unless told otherwise.
 - `.agents/AGENTS.md` mentions Firestore; this project uses Supabase, so ignore it.

@@ -8,4 +8,11 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  // jSquash loads its .wasm via import.meta.url; pre-bundling breaks those paths
+  optimizeDeps: {
+    exclude: ['@jsquash/avif', '@jsquash/webp', '@jsquash/resize'],
+  },
+  worker: {
+    format: 'es',
+  },
 })

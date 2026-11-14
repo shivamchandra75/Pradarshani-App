@@ -174,7 +174,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
     try {
       let coverUrl: string | null = null;
       if (newBookCoverFile) {
-        const compressedFile = await compressImageIfNeeded(newBookCoverFile);
+        const compressedFile = await compressImageIfNeeded(newBookCoverFile, 'cover');
         coverUrl = await uploadImageFile(compressedFile, 'covers');
       }
 

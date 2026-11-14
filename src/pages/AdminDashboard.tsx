@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
     try {
       let coverUrl: string | null = null;
       if (newBookCoverFile) {
-        const compressedFile = await compressImageIfNeeded(newBookCoverFile);
+        const compressedFile = await compressImageIfNeeded(newBookCoverFile, 'cover');
         coverUrl = await uploadImageFile(compressedFile, 'covers');
       }
 
@@ -345,7 +345,7 @@ export const AdminDashboard: React.FC = () => {
             {/* 2. Description */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Description (Optional)
+                Description
               </label>
               <textarea
                 rows={3}

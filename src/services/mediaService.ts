@@ -12,7 +12,12 @@ export async function uploadImageFile(file: File, folderPrefix = 'proofs'): Prom
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(fileName, file, { upsert: true });
+    .upload(fileName, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+      // Names are unique per upload and never overwritten, so long caching is safe (saves egress)
+      cacheControl: '31536000',
+    });
 
   if (uploadError) {
     throw new Error(`Failed to upload file to storage bucket: ${uploadError.message}`);
